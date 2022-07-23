@@ -6,14 +6,22 @@ struct
 
   exception Unsupported
 
-  fun build dir (basdec, acc as (last, rest)) =
+  fun build dir (basdec, acc as (last, rest, all, cms)) =
     case basdec of
       DecEmpty => acc
     | DecMultiple {elems, ...} =>
         List.foldl (build dir) acc (Seq.toList elems)
     | DecPathMLB {path, token} => generateFrom acc path
     | DecPathSML {path, token} =>
-        (WFile.make (WFile.futureImports last) (FilePath.join (dir, path)), last::rest)
+        let
+          val fp = FilePath.join (dir, path)
+        in
+          ( WFile.make (WFile.futureImports last) fp
+          , last::rest
+          , last::all
+          , cms
+          )
+        end
     | DecBasis _ => raise Unsupported
     | DecLocalInEnd _ => raise Unsupported
     | DecOpen _ => raise Unsupported
@@ -31,6 +39,13 @@ struct
       build dir (basdec, start)
     end
 
-  val generate = generateFrom (WFile.blank, [])
+  fun generate file =
+    let
+      val cmtop = FileName.newCM ()
+      val (last, rest, all, cms) = generateFrom (WFile.blank, [], [], []) file
+      val top = (List.tl o List.rev) (last :: rest)
+    in
+      ((List.tl o List.rev) (last::all), (CMFile.group cmtop top) :: cms)
+    end
 
 end

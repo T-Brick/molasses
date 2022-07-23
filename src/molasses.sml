@@ -1,14 +1,14 @@
 
 val infile = List.hd (CommandLineArgs.positional ())
 
-fun writeOut dir (wrapped, _) =
+fun writeOut dir name toString (wrapped, _) =
   let
-    val file = dir ^ "/.mollasses/" ^ (
-        FileName.toString (WrappedFile.name wrapped)
+    val file = dir ^ "/" ^ (
+        FileName.toString (name wrapped)
       )
     val outstream = TextIO.openOut file
   in
-    TextIO.output (outstream, WrappedFile.toString wrapped);
+    TextIO.output (outstream, toString wrapped);
     TextIO.output (outstream, "\n");
     TextIO.closeOut outstream
   end
@@ -18,11 +18,16 @@ val _ =
     SOME "mlb" =>
       let
         val fp = FilePath.fromUnixPath infile
-        val dir = FilePath.toHostPath (FilePath.dirname fp)
-        val (f,fs) = CMGenerator.generate fp
-        val files = (List.tl o List.rev) (f::fs)
+        val dir = FilePath.toHostPath (FilePath.dirname fp) ^ "/.molasses"
+        val _ = OS.Process.system ("rm -rf " ^ dir)
+        val _ = OS.Process.system ("mkdir " ^ dir)
+        val (files, cms) = CMGenerator.generate fp
+
+        val writeSML = writeOut dir WrappedFile.name WrappedFile.toString
+        val writeCM  = writeOut dir CMFile.name CMFile.toString
       in
-        List.foldl (writeOut dir) () files
+        List.foldl (writeSML) () files;
+        List.foldl (writeCM) () cms
       end
   | SOME _ =>
       let

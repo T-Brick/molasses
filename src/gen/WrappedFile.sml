@@ -7,6 +7,7 @@ structure WrappedFile : sig
 
   val futureImports : wrapped -> InfixDict.t * Import.t list
   val name : wrapped -> FileName.t
+  val exports : wrapped -> StrExport.t list
 
   val toString : wrapped -> string
 end = struct
@@ -55,8 +56,9 @@ end = struct
       }
     end
 
-  fun futureImports (wrapped : t) = #future wrapped
-  val name : t -> FileName.t = #name
+  val futureImports : wrapped -> InfixDict.t * Import.t list = #future
+  val name : wrapped -> FileName.t = #name
+  val exports : wrapped -> StrExport.t list = #exports
 
   local
     fun astToString ast =

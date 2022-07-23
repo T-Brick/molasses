@@ -1,5 +1,6 @@
 .DS_Store
 .cm
-mollasses-file*.sml
-mollasses-sources*.sml
+.molasses
+molasses-file*.sml
+molasses-sources*.sml
 molasses

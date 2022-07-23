@@ -9,9 +9,9 @@ You can build `molasses` using `make`, then passing in a MLB file to the executa
 
 ```sh
 make
-./mollasses test/either/either.mlb
+./molasses test/either/either.mlb
 ```
-This will generate some files in the `test/either/.mollasses` directory. You can then load the files into the SML/NJ REPL using the associated `sources.cm` file.
+This will generate some files in the `test/either/.molasses` directory. You can then load the files into the SML/NJ REPL using the associated `molasses-sources1.cm` file.
 
 ## Naming
 

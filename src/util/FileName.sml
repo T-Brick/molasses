@@ -13,11 +13,11 @@ end = struct
   val sml_counter = ref 0
   val cm_counter  = ref 1
 
-  val sml_name = "mollasses-file"
-  val cm_name  = "mollasses-sources"
+  val sml_name = "molasses-file"
+  val cm_name  = "molasses-sources"
 
   fun newSML () = SML (!sml_counter before sml_counter := !sml_counter + 1)
-  val newCM  () = CM  (!cm_counter  before cm_counter  := !cm_counter  + 1)
+  fun newCM  () = CM  (!cm_counter  before cm_counter  := !cm_counter  + 1)
 
   val toString =
    fn SML n => sml_name ^ Int.toString n ^ ".sml"
