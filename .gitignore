@@ -1,4 +1,5 @@
 .DS_Store
 .cm
-autogen*.sml
+mollasses-file*.sml
+mollasses-sources*.sml
 molasses

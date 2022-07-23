@@ -1,15 +1,16 @@
 
 val infile = List.hd (CommandLineArgs.positional ())
 
-fun writeOut dir (wrapped, i) =
+fun writeOut dir (wrapped, _) =
   let
-    val file = dir ^ "/.mollasses/autogen" ^ (Int.toString i) ^ ".sml"
+    val file = dir ^ "/.mollasses/" ^ (
+        FileName.toString (WrappedFile.name wrapped)
+      )
     val outstream = TextIO.openOut file
   in
     TextIO.output (outstream, WrappedFile.toString wrapped);
     TextIO.output (outstream, "\n");
-    TextIO.closeOut outstream;
-    i + 1
+    TextIO.closeOut outstream
   end
 
 val _ =
@@ -21,7 +22,7 @@ val _ =
         val (f,fs) = CMGenerator.generate fp
         val files = (List.tl o List.rev) (f::fs)
       in
-        ignore (List.foldl (writeOut dir) 0 files)
+        List.foldl (writeOut dir) () files
       end
   | SOME _ =>
       let

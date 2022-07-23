@@ -1,6 +1,8 @@
 ../../parse-sml/src/ast/sources.mlb
 ../../parse-sml/src/pretty-print/sources.mlb
 
-../util/InternalStruct.sml
-ImportExport.sml
+../util/sources.mlb
+Import.sml
+ExpExport.sml
+StrExport.sml
 FindTopDecs.sml

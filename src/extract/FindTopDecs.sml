@@ -1,12 +1,15 @@
 structure FindTopDecs : sig
-  val find : Ast.t -> (Export.t list * Import.t list)
+  val find : Ast.t -> (ExpExport.t list * Import.t list * StrExport.t list)
 end = struct
   open Ast
 
   structure I = Import
-  structure E = Export
+  structure E = ExpExport
+  structure SE = StrExport
 
   val appendBoth = fn ((a,b),(x,y)) => (a @ x, b @ y)
+  val appendTrip = fn ((a,b,c),(x,y,z)) => (a @ x, b @ y, c @ z)
+  val flat = fn ((x,y),z) => (x,y,z)
 
   fun getFun fname_args =
     E.Fun (
@@ -65,19 +68,26 @@ end = struct
 
   fun findStrDec strdec =
     case strdec of
-      Str.DecEmpty => ([], [])
-    | Str.DecCore d => findExpDec d
-    | Str.DecStructure r => ([], [])
+      Str.DecEmpty => ([], [], [])
+    | Str.DecCore d => flat (findExpDec d, [])
+    | Str.DecStructure r => ([], [],
+        Seq.toList (Seq.map (SE.Str o Token.toString o #strid) (#elems r))
+    )
     | Str.DecMultiple r =>
-        Seq.reduce appendBoth ([], []) (Seq.map findStrDec (#elems r))
+        Seq.reduce appendTrip ([], [], []) (Seq.map findStrDec (#elems r))
     | Str.DecLocalInEnd r => findStrDec (#strdec2 r)
     | Str.MLtonOverload r => raise Fail "Unimplemented"
 
   fun findTopDec topdec =
     case topdec of
-      StrDec strdec => findStrDec strdec
-    | _ => ([], [])
+      SigDec (Sig.Signature r) => ([], [],
+        Seq.toList (Seq.map (SE.Sig o Token.toString o #ident) (#elems r))
+    )
+    | StrDec strdec => findStrDec strdec
+    | FunDec (Fun.DecFunctor r) => ([], [],
+        Seq.toList (Seq.map (SE.Fun o Token.toString o #funid) (#elems r))
+    )
 
   fun find (Ast topdecs) =
-    Seq.reduce appendBoth ([], []) (Seq.map (findTopDec o #topdec) topdecs)
+    Seq.reduce appendTrip ([], [], []) (Seq.map (findTopDec o #topdec) topdecs)
 end
