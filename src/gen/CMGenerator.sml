@@ -6,7 +6,10 @@ struct
 
   exception Unsupported
 
-  fun build dir (basdec, acc as (last, rest, all, cms)) =
+  (* todo take this in *)
+  val pathmap = MLtonPathMap.getPathMap ()
+
+  fun build dir (basdec, acc as (last, rest, all, libs, cms)) =
     case basdec of
       DecEmpty => acc
     | DecMultiple {elems, ...} =>
@@ -19,6 +22,7 @@ struct
           ( WFile.make (WFile.futureImports last) fp
           , last::rest
           , last::all
+          , libs
           , cms
           )
         end
@@ -30,22 +34,32 @@ struct
     | DecFunctor _ => raise Unsupported
     | DecAnn _ => raise Unsupported
     | DecUnderscorePrim _ => raise Unsupported
-  and generateFrom start file =
+  and generateFrom (start as (last, rest, all, libs, cms)) file =
     let
-      val dir = FilePath.dirname file
-      val source = Source.loadFromFile file
-      val Ast basdec = MLBParser.parse source
+      val {result, used} = MLtonPathMap.expandPath pathmap file
+      val fp = FilePath.toUnixPath file
     in
-      build dir (basdec, start)
+      if List.exists (fn s => s = "SML_LIB") used
+      then (last, rest, all, FileName.fromLibrary fp :: libs, cms)
+      else
+        let
+          val dir = FilePath.dirname file
+          val source = Source.loadFromFile file
+          val Ast basdec = MLBParser.parse source
+        in
+          build dir (basdec, start)
+        end
     end
 
   fun generate file =
     let
       val cmtop = FileName.newCM ()
-      val (last, rest, all, cms) = generateFrom (WFile.blank, [], [], []) file
+      val (last, rest, all, libs, cms) =
+        generateFrom (WFile.blank, [], [], [], []) file
       val top = (List.tl o List.rev) (last :: rest)
+      val cm = CMFile.addSources (CMFile.group cmtop top) libs
     in
-      ((List.tl o List.rev) (last::all), (CMFile.group cmtop top) :: cms)
+      ((List.tl o List.rev) (last::all), cm :: cms)
     end
 
 end

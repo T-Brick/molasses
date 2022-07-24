@@ -5,9 +5,11 @@ structure FileName : sig
   val newSML : unit -> t
   val newCM  : unit -> t
 
+  val fromLibrary : string -> t
+
   val toString : filename -> string
 end = struct
-  datatype filename = SML of int | CM of int
+  datatype filename = SML of int | CM of int | Lib of string
   type t = filename
 
   val sml_counter = ref 0
@@ -19,7 +21,10 @@ end = struct
   fun newSML () = SML (!sml_counter before sml_counter := !sml_counter + 1)
   fun newCM  () = CM  (!cm_counter  before cm_counter  := !cm_counter  + 1)
 
+  val fromLibrary = Lib o LibraryMap.convert
+
   val toString =
    fn SML n => sml_name ^ Int.toString n ^ ".sml"
     | CM  n => cm_name  ^ Int.toString n ^ ".cm"
+    | Lib s => s
 end

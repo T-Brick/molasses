@@ -1,6 +1,8 @@
+$(SML_LIB)/basis/basis.mlb
 either-infixes.sml
 either-sigs.sml
 either-strs.sml
+
 (* local
   (* import Basis Library *)
   $(SML_LIB)/basis/basis.mlb
