@@ -4,7 +4,7 @@ struct
 
   structure WFile = WrappedFile
 
-  exception Unsupported
+  exception Unsupported of string
 
   (* todo take this in *)
   val pathmap = MLtonPathMap.getPathMap ()
@@ -17,10 +17,10 @@ struct
       DecEmpty => acc
     | DecMultiple {elems, ...} =>
         List.foldl (build dir) acc (Seq.toList elems)
-    | DecPathMLB {path, token} => generateFrom acc path
+    | DecPathMLB {path, token} =>
+        generateFrom acc ((FilePath.normalize o FilePath.join) (dir, path)) path
     | DecPathSML {path, token} =>
         let
-          val () = print ("Expanding file " ^ (FilePath.toUnixPath path) ^ "\n")
           val {result, used} =
             MLtonPathMap.expandPath
               pathmap
@@ -29,7 +29,7 @@ struct
         in
           case isLoaded result ((last_path, last_file)::all) of
             SOME (_,_) => (
-              print "Already loaded. Skipping...";
+              print "Already loaded. Skipping...\n";
               acc
             )
           | NONE =>
@@ -40,18 +40,18 @@ struct
             , cms
             )
         end
-    | DecBasis _ => raise Unsupported
-    | DecLocalInEnd _ => raise Unsupported
-    | DecOpen _ => raise Unsupported
-    | DecStructure _ => raise Unsupported
-    | DecSignature _ => raise Unsupported
-    | DecFunctor _ => raise Unsupported
-    | DecAnn _ => raise Unsupported
-    | DecUnderscorePrim _ => raise Unsupported
-  and generateFrom (start as (last, rest, all, libs, cms)) file =
+    | DecBasis _ => raise Unsupported "MLB basis dec not supported"
+    | DecLocalInEnd _ => raise Unsupported "MLB local dec not supported"
+    | DecOpen _ => raise Unsupported "MLB open dec not supported"
+    | DecStructure _ => raise Unsupported "MLB structure dec not supported"
+    | DecSignature _ => raise Unsupported "MLB signature dec not supported"
+    | DecFunctor _ => raise Unsupported "MLB functor dec not supported"
+    | DecAnn _ => raise Unsupported "MLB annotations not supported"
+    | DecUnderscorePrim _ => raise Unsupported "MLB underscore not supported"
+  and generateFrom (start as (last, rest, all, libs, cms)) file raw_path =
     let
       val {result, used} = MLtonPathMap.expandPath pathmap file
-      val unixpath = FilePath.toUnixPath file
+      val unixpath = FilePath.toUnixPath raw_path
       val () = print ("Loading file " ^ unixpath ^ "\n")
     in
       if List.exists (fn s => s = "SML_LIB") used
@@ -70,7 +70,10 @@ struct
     let
       val cmtop = FileName.newCM ()
       val (last, rest, all, libs, cms) =
-        generateFrom ((FilePath.fromFields [""], WFile.blank), [], [], [], []) file
+        generateFrom
+          ((FilePath.fromFields [""], WFile.blank), [], [], [], [])
+          file
+          file
       val top = (List.map #2 o List.tl o List.rev) (last :: rest)
       val cm = CMFile.addSources (CMFile.group cmtop top) libs
       val out_all = (List.map #2 o List.tl o List.rev) (last::all)
