@@ -8,6 +8,7 @@ structure FileName : sig
   val fromLibrary : string -> t
 
   val toString : filename -> string
+  val eq : filename * filename -> bool
 end = struct
   datatype filename = SML of int | CM of int | Lib of string
   type t = filename
@@ -27,4 +28,9 @@ end = struct
    fn SML n => sml_name ^ Int.toString n ^ ".sml"
     | CM  n => cm_name  ^ Int.toString n ^ ".cm"
     | Lib s => s
+  val eq =
+   fn (SML n, SML m) => n = m
+    | (CM n , CM m ) => n = m
+    | (Lib s, Lib t) => s = t
+    | _ => false
 end

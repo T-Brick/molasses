@@ -12,6 +12,7 @@ structure CMFile : sig
   val addSources : cmfile -> FileName.t list  -> cmfile
 
   val restrictExports : cmfile -> StrExport.t list -> cmfile
+  val normalize : cmfile -> cmfile
 
   val name : cmfile -> FileName.t
   val toString : cmfile -> string
@@ -44,6 +45,25 @@ end = struct
   in
     val group   = mk Group
     val library = mk Library
+  end
+
+  local
+    fun removeDups eq =
+      let
+        fun helper (x, acc) =
+          if List.exists (fn y => eq (x, y)) acc
+          then acc
+          else x::acc
+      in
+        List.foldl helper []
+      end
+  in
+    fun normalize (name, ty, exports, sources) =
+      ( name
+      , ty
+      , removeDups StrExport.eq exports
+      , removeDups FileName.eq sources
+      )
   end
 
   fun name (name, _, _, _) = name
