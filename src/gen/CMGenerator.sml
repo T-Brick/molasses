@@ -6,19 +6,93 @@ struct
 
   exception Unsupported of string
 
+  datatype gened = CM of CMFile.t | SML of WFile.t
+
+  type out =
+    { cms : CMFile.t list
+    , smls : WFile.t list
+    , future : WFile.future
+    , filter : StrExport.t list
+    , gened : (FilePath.t option * gened) list
+    }
+  val emptyOut =
+    { cms = []
+    , smls = []
+    , future = WFile.initFuture
+    , filter = []
+    , gened = []
+    }
+
+  (* most recent at the front *)
+  fun joinOut (out1 : out) (out2 : out) : out =
+    { cms = (#cms out2) @ (#cms out1)
+    , smls = (#smls out2) @ (#smls out1)
+    , future = #future out2
+    , filter = (#filter out2) @ (#filter out1)
+    , gened = (#gened out2) @ (#gened out1)
+    }
+
   (* todo take this in *)
   val pathmap = MLtonPathMap.getPathMap ()
 
-  fun isLoaded path : (FilePath.t * 'a) list -> (FilePath.t * 'a) option =
-    List.find (fn (f,_) => FilePath.sameFile (path, f))
+  fun isLoaded path : (FilePath.t option * 'a) list -> (FilePath.t option * 'a) option =
+    List.find (fn (SOME f,_) => FilePath.sameFile (path, f) | _ => false)
 
-  fun build dir (basdec, acc as ((last_path, last_file), rest, all, libs, cms)) =
+  fun create dir cfile acc basdec =
     case basdec of
-      DecEmpty => acc
+      DecEmpty => emptyOut
     | DecMultiple {elems, ...} =>
-        List.foldl (build dir) acc (Seq.toList elems)
+        let
+          val file = FileName.newCM ()
+          fun folder (d, out) = (joinOut out o create dir NONE out) d
+          val {cms, smls, future, filter, gened} =
+            List.foldl folder acc (Seq.toList elems)
+          val cm = CMFile.normalize
+            (CMFile.restrictExports (CMFile.library file (smls, cms)) filter)
+        in
+          { cms = [cm]
+          , smls = []
+          , future = future
+          , filter = []
+          , gened = (cfile, CM cm)::gened
+          }
+        end
     | DecPathMLB {path, token} =>
-        generateFrom acc ((FilePath.normalize o FilePath.join) (dir, path)) path
+        let
+          val file = (FilePath.normalize o FilePath.join) (dir, path)
+          val {result, used} = MLtonPathMap.expandPath pathmap file
+          val unixpath = FilePath.toUnixPath path
+          val () = print ("Loading file " ^ unixpath ^ "\n")
+          val future = #future acc
+        in
+        (* a src file is only loaded once, so we can just output it directly *)
+          case isLoaded result (#gened acc) of
+            SOME (_,SML g) =>
+              { cms = [], smls = [g], future = future, filter = [], gened = [] }
+          | SOME (_, CM g) =>
+              { cms = [g], smls = [], future = future, filter = [], gened = [] }
+          | NONE => (
+              if List.exists (fn s => s = "SML_LIB") used then
+                let
+                  val wfile = WFile.makeLib unixpath future
+                in
+                  { cms = []
+                  , smls = [wfile]
+                  , future=future
+                  , filter = []
+                  , gened = []
+                  }
+                end
+              else
+                let
+                  val dir = FilePath.dirname result
+                  val source = Source.loadFromFile result
+                  val Ast basdec = MLBParser.parse source
+                in
+                  create dir (SOME path) acc basdec
+                end
+          )
+        end
     | DecPathSML {path, token} =>
         let
           val {result, used} =
@@ -26,19 +100,25 @@ struct
               pathmap
               ((FilePath.normalize o FilePath.join) (dir, path))
           val () = print ("Loading file " ^ (FilePath.toUnixPath result) ^ "\n")
+          val future = #future acc
         in
-          case isLoaded result ((last_path, last_file)::all) of
-            SOME (_,_) => (
-              print "Already loaded. Skipping...\n";
-              acc
-            )
+        (* a src file is only loaded once, so we can just output it directly *)
+          case isLoaded result (#gened acc) of
+            SOME (_,SML g) =>
+              { cms = [], smls = [g], future = future, filter = [], gened = [] }
+          | SOME (_, CM g) =>
+              { cms = [g], smls = [], future = future, filter = [], gened = [] }
           | NONE =>
-            ( (result, WFile.make (WFile.futureImports (last_file)) result)
-            , (last_path, last_file)::rest
-            , (last_path, last_file)::all
-            , libs
-            , cms
-            )
+            let
+              val wfile = WFile.make future result
+            in
+              { cms = []
+              , smls = [wfile]
+              , future = WFile.futureImports wfile
+              , filter = []
+              , gened = [(SOME path, SML wfile)]
+              }
+            end
         end
     | DecBasis _ => raise Unsupported "MLB basis dec not supported"
     | DecLocalInEnd _ => raise Unsupported "MLB local dec not supported"
@@ -48,37 +128,19 @@ struct
     | DecFunctor _ => raise Unsupported "MLB functor dec not supported"
     | DecAnn _ => raise Unsupported "MLB annotations not supported"
     | DecUnderscorePrim _ => raise Unsupported "MLB underscore not supported"
-  and generateFrom (start as (last, rest, all, libs, cms)) file raw_path =
-    let
-      val {result, used} = MLtonPathMap.expandPath pathmap file
-      val unixpath = FilePath.toUnixPath raw_path
-      val () = print ("Loading file " ^ unixpath ^ "\n")
-    in
-      if List.exists (fn s => s = "SML_LIB") used
-      then (last, rest, all, FileName.fromLibrary unixpath :: libs, cms)
-      else
-        let
-          val dir = FilePath.dirname result
-          val source = Source.loadFromFile result
-          val Ast basdec = MLBParser.parse source
-        in
-          build dir (basdec, start)
-        end
-    end
 
   fun generate file =
     let
-      val cmtop = FileName.newCM ()
-      val (last, rest, all, libs, cms) =
-        generateFrom
-          ((FilePath.fromFields [""], WFile.blank), [], [], [], [])
-          file
-          file
-      val top = (List.map #2 o List.tl o List.rev) (last :: rest)
-      val cm = CMFile.addSources (CMFile.group cmtop top) libs
-      val out_all = (List.map #2 o List.tl o List.rev) (last::all)
+      val {result, used} = MLtonPathMap.expandPath pathmap file
+      val unixpath = FilePath.toUnixPath file
+      val () = print ("Loading file " ^ unixpath ^ "\n")
+
+      val dir = FilePath.dirname result
+      val source = Source.loadFromFile result
+      val Ast basdec = MLBParser.parse source
+      val res = create dir (SOME file) emptyOut basdec
     in
-      (out_all, List.map CMFile.normalize (cm :: cms))
+      List.map #2 (#gened res)
     end
 
 end

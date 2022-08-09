@@ -1,35 +1,49 @@
 structure WrappedFile : sig
+  type future = InfixDict.t * Import.t list
   type wrapped
   type t = wrapped
 
+  val initFuture : future
   val blank : wrapped
-  val make : InfixDict.t * Import.t list -> FilePath.t -> wrapped
+  val make : future -> FilePath.t -> wrapped
+  val makeLib : string -> future -> wrapped
 
-  val futureImports : wrapped -> InfixDict.t * Import.t list
+  val futureImports : wrapped -> future
   val name : wrapped -> FileName.t
   val exports : wrapped -> StrExport.t list
 
   val toString : wrapped -> string
 end = struct
 
+  type future = InfixDict.t * Import.t list
   type wrapped =
     { name    : FileName.t
     , imports : Import.t list
     , istr    : (InternalStruct.t * ExpExport.t list) option
     , ast     : Ast.t
     , exports : StrExport.t list
-    , future  : InfixDict.t * Import.t list
+    , future  : future
     }
   type t = wrapped
 
-  val blank : wrapped =
-    { name    = FileName.newSML ()
-    , imports = []
-    , istr    = NONE
-    , ast     = Ast.Ast (Seq.empty ())
-    , exports = []
-    , future  = (InfixDict.initialTopLevel, [])
-    }
+  val initFuture : future = (InfixDict.initialTopLevel, [])
+
+  local
+    fun makeEmpty name future =
+      { name    = name
+      , imports = []
+      , istr    = NONE
+      , ast     = Ast.Ast (Seq.empty ())
+      , exports = []
+      , future  = future
+      }
+  in
+    val blank : wrapped =
+      makeEmpty (FileName.newSML ()) initFuture
+    val makeLib : string -> future -> wrapped =
+      makeEmpty o FileName.fromLibrary
+  end
+
   fun make (fixities, imports) file =
     let
       val source = Source.loadFromFile file

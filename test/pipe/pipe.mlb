@@ -1,3 +1,4 @@
+$(SML_LIB)/basis/basis.mlb
 pipe-infix.sml
 pipe-impl.sml
 pipe-use.sml

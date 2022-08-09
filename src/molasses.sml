@@ -13,6 +13,10 @@ fun writeOut dir name toString (wrapped, _) =
     TextIO.closeOut outstream
   end
 
+fun applyGened (c,s) =
+ fn CMGenerator.CM cm => c cm
+  | CMGenerator.SML sml => s sml
+
 val _ =
   case OS.Path.ext infile of
     SOME "mlb" =>
@@ -21,13 +25,13 @@ val _ =
         val dir = FilePath.toHostPath (FilePath.dirname fp) ^ "/.molasses"
         val _ = OS.Process.system ("rm -rf " ^ dir)
         val _ = OS.Process.system ("mkdir " ^ dir)
-        val (files, cms) = CMGenerator.generate fp
+        val gened = CMGenerator.generate fp
 
-        val writeSML = writeOut dir WrappedFile.name WrappedFile.toString
-        val writeCM  = writeOut dir CMFile.name CMFile.toString
+        val name = applyGened (CMFile.name, WrappedFile.name)
+        val toString = applyGened (CMFile.toString, WrappedFile.toString)
+        val write = writeOut dir name toString
       in
-        List.foldl (writeSML) () files;
-        List.foldl (writeCM) () cms
+        List.foldl (write) () gened
       end
   | SOME _ =>
       let

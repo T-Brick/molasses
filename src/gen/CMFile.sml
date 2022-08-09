@@ -2,8 +2,8 @@ structure CMFile : sig
   type cmfile
   type t = cmfile
 
-  val group   : FileName.t -> WrappedFile.t list -> cmfile
-  val library : FileName.t -> WrappedFile.t list -> cmfile
+  val group   : FileName.t -> WrappedFile.t list * cmfile list -> cmfile
+  val library : FileName.t -> WrappedFile.t list * cmfile list -> cmfile
 
   val addExport : cmfile -> StrExport.t -> cmfile
   val addSource : cmfile -> FileName.t  -> cmfile
@@ -24,6 +24,8 @@ end = struct
   type cmfile = (FileName.t * cmtype * StrExport.t list * FileName.t list)
   type t = cmfile
 
+  fun name (name, _, _, _) = name
+
   fun addExport (name, ty, exports, sources) export =
     (name, ty, export::exports, sources)
   fun addSource (name, ty, exports, sources) source =
@@ -32,16 +34,22 @@ end = struct
   val addExports = List.foldl (fn (e, f) => addExport f e)
   val addSources = List.foldl (fn (e, f) => addSource f e)
 
-  fun restrictExports (name, ty, _, sources) exports =
-    (name, ty, exports, sources)
+  fun restrictExports (name, ty, exp_old, sources) exp_new =
+    case exp_new of
+      [] => (name, ty, exp_old, sources)
+    | _  => (name, ty, exp_new, sources)
 
   local
-    fun mk ty name wraps =
+    fun exports (_, _, exports, _) = exports
+    fun mk ty fname (wraps, cmfiles) =
       addSources
         ( addExports
-            (name, ty, [], [])
-            (List.concat (List.map (WrappedFile.exports) wraps)) )
-        (List.map (WrappedFile.name) wraps)
+            (fname, ty, [], [])
+            ( List.concat
+                ( List.map (WrappedFile.exports) wraps
+                @ List.map exports cmfiles )
+            ) )
+        ( (List.map (WrappedFile.name) wraps) @ (List.map name cmfiles) )
   in
     val group   = mk Group
     val library = mk Library
@@ -66,11 +74,16 @@ end = struct
       )
   end
 
-  fun name (name, _, _, _) = name
   fun toString (name, ty, exports, sources) =
     (case ty of
         Group => "Group\n\t"
-      | Library => "Library\n\t"
+      | Library =>
+        case exports of
+          [] => (
+            print "Library with no exports, converting to group...";
+            "Group\n\t"
+          )
+        | _ => "Library\n\t"
     ) ^ (String.concatWith
           "\n\t"
           (List.map StrExport.toString (List.rev exports))
