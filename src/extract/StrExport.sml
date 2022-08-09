@@ -16,6 +16,10 @@ struct
       | Sig (s, s2) => "signature " ^ s ^ (rename s2)
       | Fun (s, s2) => "functor " ^ s ^ (rename s2)
   end
+  val toSimpleString =
+    fn Str (s, _) => toString (Str (s, NONE))
+     | Sig (s, _) => toString (Sig (s, NONE))
+     | Fun (s, _) => toString (Fun (s, NONE))
 
   val eq =
    fn (Str s1, Str s2) => s1 = s2

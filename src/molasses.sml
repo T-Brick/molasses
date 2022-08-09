@@ -13,9 +13,10 @@ fun writeOut dir name toString (wrapped, _) =
     TextIO.closeOut outstream
   end
 
-fun applyGened (c,s) =
+fun applyGened (c,s,r) =
  fn CMGenerator.CM cm => c cm
   | CMGenerator.SML sml => s sml
+  | CMGenerator.Rename rename => r rename
 
 val _ =
   case OS.Path.ext infile of
@@ -27,8 +28,10 @@ val _ =
         val _ = OS.Process.system ("mkdir " ^ dir)
         val gened = CMGenerator.generate fp
 
-        val name = applyGened (CMFile.name, WrappedFile.name)
-        val toString = applyGened (CMFile.toString, WrappedFile.toString)
+        val name = applyGened (CMFile.name, WrappedFile.name, fn (p,_) => p)
+        val toString = applyGened (CMFile.toString, WrappedFile.toString,
+          fn (_, v) => String.concatWith "\n" (List.map StrExport.toString v)
+        )
         val write = writeOut dir name toString
       in
         List.foldl (write) () gened

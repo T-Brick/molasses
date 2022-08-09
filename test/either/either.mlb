@@ -1,9 +1,4 @@
-$(SML_LIB)/basis/basis.mlb
-either-infixes.sml
-either-sigs.sml
-either-strs.sml
-
-(* local
+local
   (* import Basis Library *)
   $(SML_LIB)/basis/basis.mlb
   either-sigs.sml
@@ -12,4 +7,4 @@ in
   signature EITHER
   structure Either
   either-open.sml
-end *)
+end
