@@ -1,48 +1,60 @@
 
-val infile = List.hd (CommandLineArgs.positional ())
+structure Molasses : sig
+  exception UnknownFile of string
+  type outdir = string
 
-fun writeOut dir name toString (wrapped, _) =
-  let
-    val file = dir ^ "/" ^ (
-        FileName.toString (name wrapped)
-      )
-    val outstream = TextIO.openOut file
-  in
-    TextIO.output (outstream, toString wrapped);
-    TextIO.output (outstream, "\n");
-    TextIO.closeOut outstream
-  end
+  val makeTo : string -> outdir -> unit
+  val make : string -> unit
+end = struct
+  exception UnknownFile of string
+  type outdir = string
 
-fun applyGened (c,s,r) =
- fn CMGenerator.CM cm => c cm
-  | CMGenerator.SML sml => s sml
-  | CMGenerator.Rename rename => r rename
+  local
+    fun applyGened (c,s,r) =
+    fn CMGenerator.CM cm => c cm
+      | CMGenerator.SML sml => s sml
+      | CMGenerator.Rename rename => r rename
 
-val _ =
-  case OS.Path.ext infile of
-    SOME "mlb" =>
+    val name = applyGened (CMFile.name, WrappedFile.name, fn (p,_) => p)
+    val toString = applyGened (CMFile.toString, WrappedFile.toString,
+      fn (_, v) => String.concatWith "\n" (List.map StrExport.toString v)
+    )
+
+    fun writeOut dir out =
       let
-        val fp = FilePath.fromUnixPath infile
-        val dir = FilePath.toHostPath (FilePath.dirname fp) ^ "/.molasses"
-        val _ = OS.Process.system ("rm -rf " ^ dir)
-        val _ = OS.Process.system ("mkdir " ^ dir)
+        val file = dir ^ "/" ^ (
+            FileName.toString (name out)
+          )
+        val outstream = TextIO.openOut file
+      in
+        TextIO.output (outstream, toString out);
+        TextIO.output (outstream, "\n");
+        TextIO.closeOut outstream
+      end
+
+    fun maker file outdir =
+      let
+        val fp = FilePath.fromUnixPath file
         val gened = CMGenerator.generate fp
+        val _ = OS.Process.system ("rm -rf " ^ outdir)
+        val _ = OS.Process.system ("mkdir " ^ outdir)
+        val write = fn (out, _) => writeOut outdir out
+      in
+        List.foldl write () gened
+      end
 
-        val name = applyGened (CMFile.name, WrappedFile.name, fn (p,_) => p)
-        val toString = applyGened (CMFile.toString, WrappedFile.toString,
-          fn (_, v) => String.concatWith "\n" (List.map StrExport.toString v)
-        )
-        val write = writeOut dir name toString
-      in
-        List.foldl (write) () gened
-      end
-  | SOME _ =>
+    fun checkFile file =
+      case OS.Path.ext file of
+        SOME "mlb" => file
+      | _ => raise UnknownFile file
+  in
+    val makeTo = maker o checkFile
+    fun make file =
       let
-        val wrapped =
-          WrappedFile.make
-            (InfixDict.initialTopLevel, [])
-            (FilePath.fromUnixPath infile)
+        val fp = FilePath.fromUnixPath file
+        val outdir = FilePath.toHostPath (FilePath.dirname fp) ^ "/.molasses"
       in
-        print (WrappedFile.toString wrapped)
+        makeTo file outdir
       end
-  | NONE => raise Fail ""
+  end
+end
