@@ -1,5 +1,5 @@
 # molasses
-`molasses` aims to allow the SML/NJ Compilation and Library Manager (CM) to support ML Basis (MLB) files. 
+`molasses` aims to allow the SML/NJ Compilation and Library Manager (CM) to support ML Basis (MLB) files.
 
 Currently, not much is implemented and much will likely change.
 

@@ -1,0 +1,5 @@
+Library
+  structure MolassesExt
+is
+  $smlnj/cm/tools.cm
+  ext.sml

@@ -1,0 +1,5 @@
+Library
+  structure MolassesTool
+is
+  $smlnj/cm/tools.cm
+  molasses-tool.sml
