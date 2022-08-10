@@ -42,7 +42,6 @@ struct
     List.find (fn (SOME f,_) => FilePath.sameFile (path, f) | _ => false)
 
   fun mkFilter future kind vals =
-    (print "adding filter....\n\n";
     { cms = []
     , smls = []
     , future = future
@@ -51,13 +50,13 @@ struct
           kind (MLBToken.toString t, Option.map MLBToken.toString t_opt)
         ) vals
     , gened = []
-    })
+    }
 
   fun create dir cfile acc basdec =
     case basdec of
       DecEmpty => emptyOut
     | DecMultiple {elems, ...} =>
-        mkNewCM dir cfile acc (FileName.newCM ()) (Seq.toList elems)
+        mkNewCM dir cfile acc (FileName.newCM ()) false (Seq.toList elems)
     | DecPathMLB {path, token} =>
         let
           val file = (FilePath.normalize o FilePath.join) (dir, path)
@@ -125,13 +124,7 @@ struct
         end
     | DecBasis _ => raise Unsupported "MLB basis dec not supported"
     | DecLocalInEnd { basdec1, basdec2, ... } =>
-        let
-          val file = FileName.newCM ()
-          val _ = print (FileName.toString file)
-          val _ = print "\n\n\n"
-        in
-        mkNewCM dir NONE acc (file) [basdec1, basdec2]
-        end
+        mkNewCM dir NONE acc (FileName.newCM ()) true [basdec1, basdec2]
     | DecOpen _ => raise Unsupported "MLB open dec not supported"
     | DecStructure { structuree, elems, delims } =>
         mkFilter (#future acc) StrExport.Str (
@@ -153,35 +146,37 @@ struct
         )
     | DecAnn _ => raise Unsupported "MLB annotations not supported"
     | DecUnderscorePrim _ => raise Unsupported "MLB underscore not supported"
-  and mkNewCM dir cfile acc file elems =
+  and mkNewCM dir cfile acc file allow_filter elems =
     let
       fun folder (d, out) = (joinOut out o create dir NONE out) d
       val {cms, smls, future, filter, gened} = List.foldl folder acc elems
       val cm = CMFile.normalize
         (CMFile.restrictExports (CMFile.library file (smls, cms)) filter)
-    in
-      case [] of
-        [] =>
-          { cms = [cm]
+      fun noFilter () =
+        { cms = [cm]
+        , smls = []
+        , future = future
+        , filter = filter
+        , gened = (cfile, CM cm)::gened
+        }
+      fun appFilter () =
+        let
+          val rename_file = FileName.newSML ()
+          val cm' = CMFile.addSource cm rename_file
+          val rename = Rename (rename_file, filter)
+        in
+          { cms = [cm']
           , smls = []
           , future = future
           , filter = []
-          , gened = (cfile, CM cm)::gened
+          , gened = (cfile, CM cm')::(NONE, rename)::gened
           }
-      | _ =>
-          let
-            val () = print "renaming..."
-            val rename_file = FileName.newSML ()
-            val cm' = CMFile.addSource cm rename_file
-            val rename = Rename (rename_file, filter)
-          in
-            { cms = [cm']
-            , smls = []
-            , future = future
-            , filter = []
-            , gened = (cfile, CM cm')::(NONE, rename)::gened
-            }
         end
+    in
+      case (allow_filter, filter) of
+        (false, _) => noFilter ()
+      | (_, [])    => noFilter ()
+      | (true, _)  => appFilter ()
     end
 
   fun generate file =

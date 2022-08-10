@@ -37,12 +37,7 @@ end = struct
   fun restrictExports (name, ty, exp_old, sources) exp_new =
     case exp_new of
       [] => (name, ty, exp_old, sources)
-    | _  => (print "restricting exports\n\n\n\n";
-      print (String.concatWith
-          "\n\t"
-          (List.map StrExport.toSimpleString (List.rev exp_new))
-        );
-    (name, ty, exp_new, sources))
+    | _  => (name, ty, exp_new, sources)
 
   local
     fun exports (_, _, exports, _) = exports
