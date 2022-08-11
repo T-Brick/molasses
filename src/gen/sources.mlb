@@ -1,7 +1,6 @@
 ../../parse-sml/src/parse-mlb/sources.mlb
 ../../parse-sml/src/ast/sources.mlb
 ../../parse-sml/src/pretty-print/sources.mlb
-../../parse-sml/src/smlfmt.mlb
 
 ../util/sources.mlb
 ../extract/sources.mlb
