@@ -48,6 +48,7 @@ end = struct
     let
       val source = Source.loadFromFile file
       val (fixities, ast) = Parser.parseWithInfdict fixities source
+        handle exn => handleLexOrParseError exn
       val (exp_exports, future, str_exports) = FindTopDecs.find ast
       val future = future @ imports
       val (future, istr) =
