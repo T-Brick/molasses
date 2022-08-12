@@ -7,5 +7,5 @@ struct
     | "$(SML_LIB)/basis/mlton.mlb" => "$/basis.cm (* mlton.mlb *)"
     | "$(SML_LIB)/basis/unsafe.mlb" => "$/basis.cm"
     | "$(SML_LIB)/basis/build/sources.mlb" => ""
-    | _ => raise Fail "Unknown library file!"
+    | s => raise Fail ("Unknown library file!\t" ^ s)
 end

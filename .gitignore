@@ -4,3 +4,4 @@
 molasses-file*.sml
 molasses-sources*.sml
 molasses
+bootstrap-test

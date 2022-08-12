@@ -30,9 +30,6 @@ struct
     , gened = Generated.join ((#gened out2), (#gened out1))
     }
 
-  (* todo take this in *)
-  val pathmap = MLtonPathMap.getPathMap ()
-
   fun mkFilter future kind vals =
     { cms = []
     , smls = []
@@ -44,11 +41,11 @@ struct
     , gened = Generated.empty
     }
 
-  fun create dir cfile acc basdec =
+  fun create (fs as (dir, pathmap)) cfile acc basdec =
     case basdec of
       DecEmpty => emptyOut
     | DecMultiple {elems, ...} =>
-        mkNewCM dir cfile acc (FileName.newCM ()) false (Seq.toList elems)
+        mkNewCM fs cfile acc (FileName.newCM ()) false (Seq.toList elems)
     | DecPathMLB {path, token} =>
         let
           val file = (FilePath.normalize o FilePath.join) (dir, path)
@@ -80,7 +77,7 @@ struct
                   val source = Source.loadFromFile result
                   val Ast basdec = MLBParser.parse source
                 in
-                  create dir (SOME path) acc basdec
+                  create (dir, pathmap) (SOME path) acc basdec
                 end
           )
         end
@@ -117,7 +114,7 @@ struct
         end
     | DecBasis _ => raise Unsupported "MLB basis dec not supported"
     | DecLocalInEnd { basdec1, basdec2, ... } =>
-        mkNewCM dir NONE acc (FileName.newCM ()) true [basdec1, basdec2]
+        mkNewCM fs NONE acc (FileName.newCM ()) true [basdec1, basdec2]
     | DecOpen _ => raise Unsupported "MLB open dec not supported"
     | DecStructure { structuree, elems, delims } =>
         mkFilter (#future acc) StrExport.Str (
@@ -139,9 +136,9 @@ struct
         )
     | DecAnn _ => raise Unsupported "MLB annotations not supported"
     | DecUnderscorePrim _ => raise Unsupported "MLB underscore not supported"
-  and mkNewCM dir cfile acc file allow_filter elems =
+  and mkNewCM (fs as (dir, pathmap)) cfile acc file allow_filter elems =
     let
-      fun folder (d, out) = (joinOut out o create dir NONE out) d
+      fun folder (d, out) = (joinOut out o create fs NONE out) d
       val {cms, smls, future, filter, gened} = List.foldl folder acc elems
       val cm = CMFile.normalize
         (CMFile.restrictExports (CMFile.library file (smls, cms)) filter)
@@ -174,7 +171,7 @@ struct
       | (true, _)  => appFilter ()
     end
 
-  fun generate file =
+  fun generate pathmap file =
     let
       val {result, used} = MLtonPathMap.expandPath pathmap file
       val unixpath = FilePath.toUnixPath file
@@ -183,7 +180,7 @@ struct
       val dir = FilePath.dirname result
       val source = Source.loadFromFile result
       val Ast basdec = MLBParser.parse source
-      val res = create dir (SOME file) emptyOut basdec
+      val res = create (dir, pathmap) (SOME file) emptyOut basdec
     in
       Generated.all (#gened res)
     end

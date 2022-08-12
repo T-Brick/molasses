@@ -3,8 +3,11 @@ structure Molasses : sig
   exception UnknownFile of string
   type outdir = string
 
-  val makeTo : string -> outdir -> unit
-  val make : string -> unit
+  val makeTo : MLtonPathMap.t -> string -> outdir -> unit
+  val make : MLtonPathMap.t -> string -> unit
+
+  val makeTo' : string -> outdir -> unit
+  val make' : string -> unit
 end = struct
   exception UnknownFile of string
   type outdir = string
@@ -32,10 +35,10 @@ end = struct
         TextIO.closeOut outstream
       end
 
-    fun maker file outdir =
+    fun maker pathmap file outdir =
       let
         val fp = FilePath.fromUnixPath file
-        val gened = CMGenerator.generate fp
+        val gened = CMGenerator.generate pathmap fp
         val _ = OS.Process.system ("rm -rf " ^ outdir)
         val _ = OS.Process.system ("mkdir " ^ outdir)
         val write = fn (out, _) => writeOut outdir out
@@ -48,13 +51,16 @@ end = struct
         SOME "mlb" => file
       | _ => raise UnknownFile file
   in
-    val makeTo = maker o checkFile
-    fun make file =
+    fun makeTo pathmap = maker pathmap o checkFile
+    fun make pathmap file =
       let
         val fp = FilePath.fromUnixPath file
         val outdir = FilePath.toHostPath (FilePath.dirname fp) ^ "/.molasses"
       in
-        makeTo file outdir
+        makeTo pathmap file outdir
       end
+
+    fun makeTo' file = makeTo (MLtonPathMap.getPathMap ()) file
+    fun make' file = make (MLtonPathMap.getPathMap ()) file
   end
 end
