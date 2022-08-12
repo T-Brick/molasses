@@ -15,11 +15,11 @@ val help =
 val mlbPathVars = CommandLineArgs.parseStrings "mlb-path-var"
 val outputs = CommandLineArgs.parseStrings "output"
 val repl_cmd = CommandLineArgs.parseString "repl-cmd" "rlwrap sml"
+
 val doREPL = CommandLineArgs.parseFlag "repl"
 val doHelp = CommandLineArgs.parseFlag "help"
-val files = CommandLineArgs.positional ()
 
-val _ = List.map print mlbPathVars
+val files = CommandLineArgs.positional ()
 
 val pathmap = MLtonPathMap.getPathMap ()
 val pathmap =
