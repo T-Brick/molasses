@@ -29,7 +29,7 @@ end = struct
 
     val name = applyGened (CMFile.name, WrappedFile.name, fn (p,_) => p)
     val toString = applyGened (CMFile.toString, WrappedFile.toString,
-      fn (_, v) => String.concatWith "\n" (List.map StrExport.toString v)
+      fn (_, v) => String.concatWith "\n" (List.map StrExport.toReplString v)
     )
 
     fun writeOut dir out =
