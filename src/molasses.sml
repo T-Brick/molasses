@@ -11,9 +11,9 @@ end = struct
 
   local
     fun applyGened (c,s,r) =
-    fn CMGenerator.CM cm => c cm
-      | CMGenerator.SML sml => s sml
-      | CMGenerator.Rename rename => r rename
+    fn Generated.CM cm => c cm
+      | Generated.SML sml => s sml
+      | Generated.Rename rename => r rename
 
     val name = applyGened (CMFile.name, WrappedFile.name, fn (p,_) => p)
     val toString = applyGened (CMFile.toString, WrappedFile.toString,

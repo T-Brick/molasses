@@ -6,4 +6,5 @@
 ../extract/sources.mlb
 WrappedFile.sml
 CMFile.sml
+Generated.sml
 CMGenerator.sml
