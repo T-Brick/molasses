@@ -54,7 +54,7 @@ struct
       DecEmpty => emptyOut
     | DecMultiple {elems, ...} =>
         mkNewCM fs cfile NONE acc (FileName.newCM ())
-          false ((Seq.toList o Seq.map (fn x => (x, NONE))) elems)
+          true ((Seq.toList o Seq.map (fn x => (x, NONE))) elems)
     | DecPathMLB {path, token} =>
         let
           val file = (FilePath.normalize o FilePath.join) (dir, path)
