@@ -7,9 +7,10 @@ end = struct
   structure E = ExpExport
   structure SE = StrExport
 
-  val mkStr = fn s => SE.Str (s, NONE)
-  val mkSig = fn s => SE.Sig (s, NONE)
-  val mkFun = fn s => SE.Fun (s, NONE)
+  fun mk f t = SE.Mark (Token.getSource t, f (Token.toString t, NONE))
+  val mkStr = mk SE.Str
+  val mkSig = mk SE.Sig
+  val mkFun = mk SE.Fun
 
   val appendBoth = fn ((a,b),(x,y)) => (a @ x, b @ y)
   val appendTrip = fn ((a,b,c),(x,y,z)) => (a @ x, b @ y, c @ z)
@@ -75,7 +76,7 @@ end = struct
       Str.DecEmpty => ([], [], [])
     | Str.DecCore d => flat (findExpDec d, [])
     | Str.DecStructure r => ([], [],
-        Seq.toList (Seq.map (mkStr o Token.toString o #strid) (#elems r))
+        Seq.toList (Seq.map (mkStr o #strid) (#elems r))
     )
     | Str.DecMultiple r =>
         Seq.reduce appendTrip ([], [], []) (Seq.map findStrDec (#elems r))
@@ -85,11 +86,11 @@ end = struct
   fun findTopDec topdec =
     case topdec of
       SigDec (Sig.Signature r) => ([], [],
-        Seq.toList (Seq.map (mkSig o Token.toString o #ident) (#elems r))
+        Seq.toList (Seq.map (mkSig o #ident) (#elems r))
     )
     | StrDec strdec => findStrDec strdec
     | FunDec (Fun.DecFunctor r) => ([], [],
-        Seq.toList (Seq.map (mkFun o Token.toString o #funid) (#elems r))
+        Seq.toList (Seq.map (mkFun o #funid) (#elems r))
     )
 
   fun find (Ast topdecs) =

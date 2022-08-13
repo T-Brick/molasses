@@ -1,5 +1,6 @@
 ../../parse-sml/src/base/sources.mlb
 
+Marker.sig
 InternalStruct.sml
 LibraryMap.sml
 FileName.sml

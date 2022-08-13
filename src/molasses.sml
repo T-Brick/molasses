@@ -22,24 +22,14 @@ end = struct
     end
 
   local
-    fun applyGened (c,s,r) =
-    fn Generated.CM cm => c cm
-      | Generated.SML sml => s sml
-      | Generated.Rename rename => r rename
-
-    val name = applyGened (CMFile.name, WrappedFile.name, fn (p,_) => p)
-    val toString = applyGened (CMFile.toString, WrappedFile.toString,
-      fn (_, v) => String.concatWith "\n" (List.map StrExport.toReplString v)
-    )
-
     fun writeOut dir out =
       let
         val file = dir ^ "/" ^ (
-            FileName.toString (name out)
+            FileName.toString (Generated.GenFile.name out)
           )
         val outstream = TextIO.openOut file
       in
-        TextIO.output (outstream, toString out);
+        TextIO.output (outstream, Generated.GenFile.toString out);
         TextIO.output (outstream, "\n");
         TextIO.closeOut outstream
       end
@@ -60,7 +50,6 @@ end = struct
         SOME "mlb" => file
       | _ => raise UnknownFile file
   in
-  
     fun makeTo pathmap = maker pathmap o checkFile
     fun make pathmap file = makeTo pathmap file (defaultDirectory file)
 

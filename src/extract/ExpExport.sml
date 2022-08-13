@@ -7,7 +7,19 @@ struct
     | Datatype of string
     | Exn of string
     | Open of string
+    | Mark of Source.t * export
   type t = export
+
+  type marker = export
+  val mark = Mark
+  fun createMark (src, export) =
+    case export of
+      Mark _ => export
+    | _ => Mark (src, export)
+  fun removeMark export =
+    case export of
+      Mark (_, export') => removeMark export'
+    | _ => export
 
   local
     fun pp show =
@@ -71,8 +83,9 @@ struct
         | Infix {left, id, right} => extractVars right (extractVars left acc)
       end
   in
-    val toString =
-     fn Val p =>
+    fun toString e =
+      case e of
+        Val p =>
           (* "val " ^ (pp PrettyPat.showPat p) ^ " = " ^ (pp PrettyPat.showPat p) *)
           let
             fun mkVal x = "val " ^ x ^ " = " ^ x
@@ -87,5 +100,7 @@ struct
       | Datatype s => "datatype " ^ s ^ " = datatype " ^ s
       | Exn s => "exception " ^ s ^ " = " ^ s
       | Open s => "open " ^ s
+      | Mark (s, e') =>
+          (toString e') ^ "\t(* " ^ (Source.toRegionString s) ^ " *)"
   end
 end

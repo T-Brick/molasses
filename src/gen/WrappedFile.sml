@@ -9,34 +9,39 @@ structure WrappedFile : sig
   val makeLib : string -> future -> wrapped
 
   val futureImports : wrapped -> future
-  val name : wrapped -> FileName.t
   val exports : wrapped -> StrExport.t list
 
+  include MARKER where type marker = wrapped
+
+  val name : wrapped -> FileName.t
   val toString : wrapped -> string
 end = struct
 
   type future = InfixDict.t * Import.t list
-  type wrapped =
-    { name    : FileName.t
-    , imports : Import.t list
-    , istr    : (InternalStruct.t * ExpExport.t list) option
-    , ast     : Ast.t
-    , exports : StrExport.t list
-    , future  : future
-    }
+  datatype wrapped =
+      Wrapped of
+        { name    : FileName.t
+        , imports : Import.t list
+        , istr    : (InternalStruct.t * ExpExport.t list) option
+        , ast     : Ast.t
+        , exports : StrExport.t list
+        , future  : future
+        }
+    | Mark of Source.t * wrapped
   type t = wrapped
 
   val initFuture : future = (InfixDict.initialTopLevel, [])
 
   local
     fun makeEmpty name future =
-      { name    = name
-      , imports = []
-      , istr    = NONE
-      , ast     = Ast.Ast (Seq.empty ())
-      , exports = []
-      , future  = future
-      }
+      Wrapped
+        { name    = name
+        , imports = []
+        , istr    = NONE
+        , ast     = Ast.Ast (Seq.empty ())
+        , exports = []
+        , future  = future
+        }
   in
     val blank : wrapped =
       makeEmpty (FileName.newSML ()) initFuture
@@ -77,18 +82,36 @@ end = struct
               (Import.Open istr_t :: future, SOME (istr_t, exp_exports))
             end
     in
-      { name    = FileName.newSML ()
-      , imports = imports
-      , istr    = istr
-      , ast     = ast
-      , exports = str_exports
-      , future  = (fixities, future)
-      }
+      Mark (source,
+        Wrapped
+          { name    = FileName.newSML ()
+          , imports = imports
+          , istr    = istr
+          , ast     = ast
+          , exports = str_exports
+          , future  = (fixities, future)
+          })
     end
 
-  val futureImports : wrapped -> InfixDict.t * Import.t list = #future
-  val name : wrapped -> FileName.t = #name
-  val exports : wrapped -> StrExport.t list = #exports
+  fun app f wf =
+    case wf of
+      Wrapped r => f r
+    | Mark (_, wf') => app f wf'
+
+  val futureImports : wrapped -> InfixDict.t * Import.t list = app #future
+  val name : wrapped -> FileName.t = app #name
+  val exports : wrapped -> StrExport.t list = app #exports
+
+  type marker = wrapped
+  val mark = Mark
+  fun createMark (src, cmfile) =
+    case cmfile of
+      Mark _ => cmfile
+    | Wrapped r => Mark (src, cmfile)
+  fun removeMark cmfile =
+    case cmfile of
+      Mark (_, cmfile') => removeMark cmfile'
+    | Wrapped _ => cmfile
 
   local
     fun astToString ast =
@@ -123,13 +146,17 @@ end = struct
           ^ body
           ^ "\nend"
   in
-    fun toString {name, imports, istr, ast, exports, future} =
-      "(* " ^ (FileName.toString name) ^ " *)\n" ^
-      importsToString imports (
-        (astToString ast)
-        ^ "\n"
-        ^ istrToString istr
-      )
+    fun toString wf =
+      case wf of
+        Wrapped {name, imports, istr, ast, exports, future} =>
+          "(* " ^ (FileName.toString name) ^ " *)\n" ^
+          importsToString imports (
+            (astToString ast)
+            ^ "\n"
+            ^ istrToString istr
+          )
+      | Mark (src, wf') =>
+          "(* " ^ (Source.toRegionString src) ^ " *)\n" ^ (toString wf')
   end
 
 end
