@@ -14,6 +14,9 @@ structure Molasses : sig
 
   val makeTo' : string -> outdir -> result
   val make' : string -> result
+
+  structure Control : CONTROL
+
 end = struct
   exception UnknownFile of string
   type outdir = string
@@ -70,4 +73,7 @@ end = struct
     fun makeTo' file = makeTo (MLtonPathMap.getPathMap ()) file
     fun make' file = make (MLtonPathMap.getPathMap ()) file
   end
+
+  structure Control = Control
+
 end

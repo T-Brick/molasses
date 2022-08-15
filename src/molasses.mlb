@@ -1,4 +1,5 @@
 gen/sources.mlb
 util/sources.mlb
+control/sources.mlb
 molasses.sml
 top.sml
