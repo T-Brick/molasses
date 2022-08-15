@@ -22,9 +22,6 @@ struct
     val rename =
      fn NONE => ""
       | SOME s => " = " ^ s
-    fun rename' d =
-     fn NONE => " = " ^ d
-      | SOME s => " = " ^ s
   in
     fun toString e =
       case e of
@@ -33,13 +30,16 @@ struct
       | Fun (s, s2) => "functor " ^ s ^ (rename s2)
       | Mark (src, e') =>
           toString e' ^ "\t(* " ^ Source.toRegionString src ^ " *)"
-    fun toReplString e =
+    fun toRenameString e =
       case e of
-        Str (s, s2) => "structure " ^ s ^ (rename' s s2)
-      | Sig (s, s2) => "signature " ^ s ^ (rename' s s2)
-      | Fun (s, s2) => "functor " ^ s ^ (rename' s s2)
+        Str (_, SOME _) => toString e
+      | Str (_, NONE) => ""
+      | Sig (_, SOME _) => toString e
+      | Sig (_, NONE) => ""
+      | Fun (_, SOME _) => toString e
+      | Fun (_, NONE) => ""
       | Mark (src, e') =>
-          toReplString e' ^ "\t(* " ^ Source.toRegionString src ^ " *)"
+          toRenameString e' ^ "\t(* " ^ Source.toRegionString src ^ " *)"
     fun toSimpleString e =
       case e of
         Str (s, _) => toString (Str (s, NONE))

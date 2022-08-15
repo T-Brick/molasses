@@ -133,6 +133,9 @@ end = struct
       Mark (_, cmfile') => removeMark cmfile'
     | CMFile _ => cmfile
 
+  fun sourceToExportString source =
+    "library(" ^ FileName.toString source ^ ")"
+
   fun toString cmfile =
     case cmfile of
       CMFile {name, cmtype, exports, sources} =>
@@ -141,8 +144,11 @@ end = struct
           | Library =>
             case exports of
               [] => (
-                print "Library with no exports, converting to group...";
-                "Group\n\t"
+                "Library\n\t"
+                ^ (String.concatWith
+                    "\n\t"
+                    (List.map sourceToExportString (List.rev sources))
+                  )
               )
             | _ => "Library\n\t"
         ) ^ (String.concatWith

@@ -25,7 +25,8 @@ structure Generated :> sig
   val sizeAll : gdict -> int
   val insert : gdict -> (FilePath.t option * GenFile.t) -> gdict
 
-  val find : gdict -> FilePath.t -> GenFile.t option
+  val findPath : gdict -> FilePath.t -> GenFile.t option
+  val findName : gdict -> FileName.t -> GenFile.t option
   val all : gdict -> GenFile.t list
 
   val join : gdict * gdict -> gdict
@@ -54,7 +55,7 @@ end = struct
       apply ( CMFile.toString
             , WrappedFile.toString
             , fn (_, v) => String.concatWith "\n"
-                            (List.map StrExport.toReplString v)
+                             (List.map StrExport.toRenameString v)
             )
 
     type marker = generated
@@ -101,7 +102,8 @@ end = struct
     | SOME f => ( StringDict.insert d (FilePath.toUnixPath f, g)
                 , StringDict.insert l ((FileName.toString o GenFile.name) g, g))
 
-  fun find (d, _) f = StringDict.find d (FilePath.toUnixPath f)
+  fun findPath (d, _) = StringDict.find d o FilePath.toUnixPath
+  fun findName (_, l) = StringDict.find l o FileName.toString
   fun all (_, l) = StringDict.listItems l
 
   fun join ((d1, l1), (d2, l2)) =

@@ -3,8 +3,14 @@ SOURCES =$(shell find src -iname "*.sml" -o -iname "*.mlb")
 molasses: $(SOURCES)
 	mlton -mlb-path-var 'COMPAT mlton' -output molasses src/molasses.mlb
 
-bootstrap-test:
-	make clean && make && ./molasses -mlb-path-var 'COMPAT mlton' -output bootstrap-test src/molasses.mlb
+bootstrap-lib:
+	./molasses -mlb-path-var 'COMPAT mlton' -output bootstrap-test parse-sml/src/base/lib/sources.mlb
+
+bootstrap-compat:
+	./molasses -mlb-path-var 'COMPAT mlton' -output bootstrap-test parse-sml/src/base/lib/compat/mlton.mlb
+
+bootstrap-ast:
+	./molasses -mlb-path-var 'COMPAT mlton' -output bootstrap-test parse-sml/src/ast/sources.mlb
 
 .PHONY: clean
 clean:
