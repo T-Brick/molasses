@@ -2,9 +2,13 @@ structure FileName : sig
   type filename
   type t = filename
 
-  val newSML : unit -> t
-  val newCM  : unit -> t
-  val fromLibrary : string -> t
+  val newSML : unit -> filename
+  val newCM  : unit -> filename
+  val fromLibrary : string -> filename
+
+  (* outputs initial filename *)
+  val resetSML : unit -> filename
+  val resetCM  : unit -> filename
 
   val isSML : filename -> bool
   val isCM : filename -> bool
@@ -25,6 +29,9 @@ end = struct
   fun newSML () = SML (!sml_counter before sml_counter := !sml_counter + 1)
   fun newCM  () = CM  (!cm_counter  before cm_counter  := !cm_counter  + 1)
   val fromLibrary = Lib o LibraryMap.convert
+
+  fun resetSML () = SML (sml_counter := 0; !sml_counter)
+  fun resetCM () = CM (cm_counter := 1; !cm_counter)
 
   val isSML = fn SML _ => true | _ => false
   val isCM  = fn CM _  => true | _ => false

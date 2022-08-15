@@ -1,5 +1,5 @@
 
-val help =
+val help_msg =
 "Usage: molasses [ARGS] FILE ... FILE\n" ^
 "Optional arguments:\n\
 \  [-mlb-path-var 'K V'] Defining a mlb path variable.\n\
@@ -25,12 +25,17 @@ val pathmap = MLtonPathMap.getPathMap ()
 val pathmap =
   List.concat (List.map MLtonPathMap.fromString mlbPathVars) @ pathmap
 
+fun help () = (
+  print help_msg;
+  OS.Process.exit OS.Process.success
+)
+
 fun run () =
   case (files, outputs) of
-    ([], _) => print help
-  | (_, []) => List.app (Molasses.make pathmap) files
+    ([], _) => help ()
+  | (_, []) => List.map (Molasses.make pathmap) files
   | (_, _) =>
-      ListPair.appEq
+      ListPair.mapEq
         (fn (file, out) => Molasses.makeTo pathmap file out)
         (files, outputs)
       handle ListPair.UnequalLengths => (
@@ -38,17 +43,26 @@ fun run () =
         OS.Process.exit OS.Process.failure
       )
 
-fun repl () =
+fun repl results =
   let
-    fun mkSource dir = dir ^ "/molasses-sources1.cm"
+    fun mkSource dir file_opt =
+      case file_opt of
+        NONE => ""
+      | SOME file =>
+          dir ^ "/" ^ (FileName.toString o Generated.GenFile.name) file
+    fun mkSources ({cm, top}, out) =
+      (mkSource out cm) ^ " " ^ (mkSource out (SOME top))
     val sources =
       case outputs of
-        [] => List.map (mkSource o Molasses.defaultDirectory) files
-      | _  => List.map mkSource outputs
+        [] =>
+          ListPair.map
+            (fn (r,f) => mkSources (r, Molasses.defaultDirectory f))
+            (results, files)
+      | _  => ListPair.map mkSources (results, outputs)
     val cmd = repl_cmd ^ " " ^ String.concatWith " " sources
   in
     OS.Process.exit (OS.Process.system cmd)
   end
 
-val _ = if doHelp then print help else run ()
-val _ = if doREPL then repl () else ()
+val results = if doHelp then help () else run ()
+val _ = if doREPL then repl results else ()

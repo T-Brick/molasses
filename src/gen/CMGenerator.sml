@@ -1,19 +1,35 @@
-structure CMGenerator =
-struct
+structure CMGenerator : sig
+  exception Unsupported of string
+
+  type output =
+    { all : Generated.GenFile.t list
+    , cm : CMFile.t option
+    , toplevel : FileName.t * Import.t list
+    }
+
+  val generate : MLtonPathMap.t -> FilePath.t -> output
+end = struct
   open MLBAst
 
   structure WFile = WrappedFile
 
   exception Unsupported of string
+  exception IllegalState
 
-  type out =
+  type output =
+    { all : Generated.GenFile.t list
+    , cm : CMFile.t option
+    , toplevel : FileName.t * Import.t list
+    }
+
+  type acc =
     { cms : CMFile.t list
     , smls : WFile.t list
     , future : WFile.future
     , filter : StrExport.t list * bool (* export list, does rename *)
     , gened : Generated.t
     }
-  val emptyOut =
+  val emptyAcc =
     { cms = []
     , smls = []
     , future = WFile.initFuture
@@ -21,7 +37,7 @@ struct
     , gened = Generated.empty
     }
 
-  fun isOutEmpty ({cms, smls, ...} : out) =
+  fun isAccEmpty ({cms, smls, ...} : acc) =
     case (cms, smls) of
       ([], []) => true
     | _ => false
@@ -70,7 +86,8 @@ struct
           | SOME (Generated.GenFile.CM g) =>
               { cms = g :: #cms acc, smls = #smls acc, future = future
               , filter = #filter acc, gened = #gened acc }
-          | SOME (Generated.GenFile.Rename _) => raise Fail "Impossible State"
+          | SOME (Generated.GenFile.Rename _) => raise IllegalState
+          | SOME (Generated.GenFile.TopLevel _) => raise IllegalState
           | NONE => (
               if List.exists (fn s => s = "SML_LIB") used then
                 let
@@ -112,7 +129,8 @@ struct
           | SOME (Generated.GenFile.CM g) =>
               { cms = g :: #cms acc, smls = #smls acc, future = future
               , filter = #filter acc, gened = #gened acc }
-          | SOME (Generated.GenFile.Rename _) => raise Fail "Impossible State"
+          | SOME (Generated.GenFile.Rename _) => raise IllegalState
+          | SOME (Generated.GenFile.TopLevel _) => raise IllegalState
           | NONE =>
             let
               val () = print "\tCouldn't find cached version, generating...\n"
@@ -137,7 +155,7 @@ struct
         let
           val new_cm = FileName.newCM ()
           val (old_cm, new_acc) =
-            if isOutEmpty acc
+            if isAccEmpty acc
             then (new_cm, acc)
             else
               let
@@ -188,11 +206,11 @@ struct
     | DecUnderscorePrim _ => raise Unsupported "MLB underscore not supported"
   and mkNewCM (fs as (dir, pathmap)) cfile tok_opt acc file elems =
     let
-      fun folder ((d, src_opt), out) =
+      fun folder ((d, src_opt), a) =
         ( (case src_opt of
               NONE => (fn x => x)
             | SOME src => (fn x => createMark (src, x))
-          ) o create fs NONE out ) d
+          ) o create fs NONE a ) d
       val {cms, smls, future, filter, gened} = List.foldl folder acc elems
       val cm = CMFile.normalize
         ( CMFile.restrictExports
@@ -230,6 +248,8 @@ struct
 
   fun generate pathmap file =
     let
+      val _ = FileName.resetSML ()
+      val top_cm = FileName.resetCM ()
       val {result, used} = MLtonPathMap.expandPath pathmap file
       val unixpath = FilePath.toUnixPath file
       val () = print ("Loading file " ^ unixpath ^ "\n")
@@ -237,9 +257,16 @@ struct
       val dir = FilePath.dirname result
       val source = Source.loadFromFile result
       val Ast basdec = MLBParser.parse source
-      val res = create (dir, pathmap) (SOME file) emptyOut basdec
+      val res = create (dir, pathmap) (SOME file) emptyAcc basdec
+
+      val convertCM = Option.mapPartial (
+        Generated.GenFile.apply (SOME, fn _ => NONE, fn _ => NONE, fn _ => NONE)
+      )
     in
-      Generated.all (#gened res)
+      { all = Generated.all (#gened res)
+      , cm = convertCM (Generated.findName (#gened res) top_cm)
+      , toplevel = (FileName.newSML (), (#2 o #future) res)
+      }
     end
 
 end

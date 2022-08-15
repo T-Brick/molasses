@@ -4,11 +4,16 @@ structure Molasses : sig
   type outdir = string
   val defaultDirectory : string -> outdir
 
-  val makeTo : MLtonPathMap.t -> string -> outdir -> unit
-  val make : MLtonPathMap.t -> string -> unit
+  type result =
+    { cm : Generated.GenFile.t option
+    , top : Generated.GenFile.t
+    }
 
-  val makeTo' : string -> outdir -> unit
-  val make' : string -> unit
+  val makeTo : MLtonPathMap.t -> string -> outdir -> result
+  val make : MLtonPathMap.t -> string -> result
+
+  val makeTo' : string -> outdir -> result
+  val make' : string -> result
 end = struct
   exception UnknownFile of string
   type outdir = string
@@ -20,6 +25,11 @@ end = struct
     in
       outdir
     end
+
+  type result =
+    { cm : Generated.GenFile.t option
+    , top : Generated.GenFile.t
+    }
 
   local
     fun writeOut dir out =
@@ -37,12 +47,16 @@ end = struct
     fun maker pathmap file outdir =
       let
         val fp = FilePath.fromUnixPath file
-        val gened = CMGenerator.generate pathmap fp
+        val { all, cm, toplevel } = CMGenerator.generate pathmap fp
         val _ = OS.Process.system ("rm -rf " ^ outdir)
         val _ = OS.Process.system ("mkdir " ^ outdir)
         val write = fn (out, _) => writeOut outdir out
       in
-        List.foldl write () gened
+        List.foldl write () all;
+        write (Generated.GenFile.TopLevel toplevel, ());
+        { cm = Option.map Generated.GenFile.CM cm
+        , top = Generated.GenFile.TopLevel toplevel
+        }
       end
 
     fun checkFile file =
