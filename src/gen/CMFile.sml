@@ -134,7 +134,8 @@ end = struct
     | CMFile _ => cmfile
 
   fun sourceToExportString source =
-    "library(" ^ FileName.toString source ^ ")"
+    (if FileName.isSML source then "source(" else "library(")
+    ^ FileName.toString source ^ ")"
 
   fun toString cmfile =
     case cmfile of

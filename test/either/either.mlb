@@ -1,3 +1,4 @@
+either-infixes.sml
 local
   (* import Basis Library *)
   $(SML_LIB)/basis/basis.mlb
@@ -6,5 +7,5 @@ local
 in
   signature EITHER
   structure Either
-  either-open.sml
+  (* either-open.sml *) (* top-level opens are supported yet : ( *)
 end

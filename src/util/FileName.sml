@@ -4,8 +4,11 @@ structure FileName : sig
 
   val newSML : unit -> t
   val newCM  : unit -> t
-
   val fromLibrary : string -> t
+
+  val isSML : filename -> bool
+  val isCM : filename -> bool
+  val isLib : filename -> bool
 
   val toString : filename -> string
   val eq : filename * filename -> bool
@@ -21,8 +24,11 @@ end = struct
 
   fun newSML () = SML (!sml_counter before sml_counter := !sml_counter + 1)
   fun newCM  () = CM  (!cm_counter  before cm_counter  := !cm_counter  + 1)
-
   val fromLibrary = Lib o LibraryMap.convert
+
+  val isSML = fn SML _ => true | _ => false
+  val isCM  = fn CM _  => true | _ => false
+  val isLib = fn Lib _ => true | _ => false
 
   val toString =
    fn SML n => sml_name ^ Int.toString n ^ ".sml"
