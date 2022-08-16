@@ -174,7 +174,8 @@ end = struct
         in
           case Generated.findName gened old_cm of
             SOME (Generated.GenFile.CM g) =>
-              {cms = g::cms, smls = smls, future = future, filter = filter, gened = gened}
+              { cms = g::cms, smls = smls, future = future
+              , filter = ([], false), gened = gened }
           | _ => raise Fail "Couldn't find file that should be generated..."
         end
     | DecOpen _ => raise Unsupported "MLB open dec not supported"
@@ -217,6 +218,7 @@ end = struct
             (CMFile.library tok_opt file (smls, cms))
             (#1 filter)
         )
+      val () = print ("Finished: " ^ FileName.toString file ^ "\n")
       fun noFilter () =
         { cms = [cm]
         , smls = []

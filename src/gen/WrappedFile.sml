@@ -33,20 +33,27 @@ end = struct
   val initFuture : future = (InfixDict.initialTopLevel, [])
 
   local
-    fun makeEmpty name future =
+    fun makeEmpty name exports future =
       Wrapped
         { name    = name
         , imports = []
         , istr    = NONE
         , ast     = Ast.Ast (Seq.empty ())
-        , exports = []
+        , exports = exports
         , future  = future
         }
   in
-    val blank : wrapped =
-      makeEmpty (FileName.newSML ()) initFuture
-    val makeLib : string -> future -> wrapped =
-      makeEmpty o FileName.fromLibrary
+    val blank : wrapped = makeEmpty (FileName.newSML ()) [] initFuture
+    fun makeLib name future =
+      let
+        val filename = FileName.fromLibrary name
+       in
+        makeEmpty
+          filename
+          [ StrExport.Lib (FileName.toString filename) ]
+          future
+      end
+
   end
 
   fun handleLexOrParseError exn =

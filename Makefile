@@ -4,13 +4,19 @@ molasses: $(SOURCES)
 	mlton -mlb-path-var 'COMPAT mlton' -output molasses src/molasses.mlb
 
 bootstrap-lib:
-	./molasses -mlb-path-var 'COMPAT mlton' -output bootstrap-test parse-sml/src/base/lib/sources.mlb
+	./molasses -mlb-path-var 'COMPAT nj' -output bootstrap-test parse-sml/src/base/lib/sources.mlb
 
 bootstrap-compat:
-	./molasses -mlb-path-var 'COMPAT mlton' -output bootstrap-test parse-sml/src/base/lib/compat/mlton.mlb
+	./molasses -mlb-path-var 'COMPAT nj' -output bootstrap-test parse-sml/src/base/lib/compat/mlton.mlb
 
 bootstrap-ast:
-	./molasses -mlb-path-var 'COMPAT mlton' -output bootstrap-test parse-sml/src/ast/sources.mlb
+	./molasses -mlb-path-var 'COMPAT nj' -output bootstrap-test parse-sml/src/ast/sources.mlb
+
+bootstrap-parse:
+	./molasses -mlb-path-var 'COMPAT nj' -output bootstrap-test parse-sml/src/parse/sources.mlb
+
+bootstrap:
+	./molasses -mlb-path-var 'COMPAT nj' -output bootstrap-test src/molasses.mlb
 
 .PHONY: clean
 clean:

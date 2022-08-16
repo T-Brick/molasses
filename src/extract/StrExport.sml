@@ -4,6 +4,7 @@ struct
       Str of string * string option
     | Sig of string * string option
     | Fun of string * string option
+    | Lib of string
     | Mark of Source.t * export
   type t = export
 
@@ -28,6 +29,7 @@ struct
         Str (s, s2) => "structure " ^ s ^ (rename s2)
       | Sig (s, s2) => "signature " ^ s ^ (rename s2)
       | Fun (s, s2) => "functor " ^ s ^ (rename s2)
+      | Lib s => "library(" ^ s ^ ")"
       | Mark (src, e') =>
           toString e' ^ "\t(* " ^ Source.toRegionString src ^ " *)"
     fun toRenameString e =
@@ -38,6 +40,7 @@ struct
       | Sig (_, NONE) => ""
       | Fun (_, SOME _) => toString e
       | Fun (_, NONE) => ""
+      | Lib _ => ""
       | Mark (src, e') =>
           toRenameString e' ^ "\t(* " ^ Source.toRegionString src ^ " *)"
     fun toSimpleString e =
@@ -45,6 +48,7 @@ struct
         Str (s, _) => toString (Str (s, NONE))
       | Sig (s, _) => toString (Sig (s, NONE))
       | Fun (s, _) => toString (Fun (s, NONE))
+      | Lib _ => toString e
       | Mark (src, e') =>
           toSimpleString e' ^ "\t(* " ^ Source.toRegionString src ^ " *)"
   end
@@ -54,6 +58,7 @@ struct
       (Str s1, Str s2) => s1 = s2
     | (Sig s1, Sig s2) => s1 = s2
     | (Fun s1, Fun s2) => s1 = s2
+    | (Lib s1, Lib s2) => s1 = s2
     | (Mark (_, e1'), _) => eq (e1', e2)
     | (_, Mark (_, e2')) => eq (e1, e2')
     | _ => false
