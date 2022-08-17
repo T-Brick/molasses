@@ -2,7 +2,7 @@ structure CMGenerator : sig
   exception Unsupported of string
 
   type output =
-    { all : Generated.GenFile.t list
+    { all : GenFile.t list
     , cm : CMFile.t option
     , toplevel : FileName.t * Import.t list
     }
@@ -17,7 +17,7 @@ end = struct
   exception IllegalState
 
   type output =
-    { all : Generated.GenFile.t list
+    { all : GenFile.t list
     , cm : CMFile.t option
     , toplevel : FileName.t * Import.t list
     }
@@ -80,14 +80,14 @@ end = struct
         in
         (* a src file is only loaded once, so we can just output it directly *)
           case Generated.findPath (#gened acc) result of
-            SOME (Generated.GenFile.SML g) =>
+            SOME (GenFile.SML g) =>
               { cms = #cms acc, smls = g :: #smls acc, future = future
               , filter = #filter acc, gened = #gened acc }
-          | SOME (Generated.GenFile.CM g) =>
+          | SOME (GenFile.CM g) =>
               { cms = g :: #cms acc, smls = #smls acc, future = future
               , filter = #filter acc, gened = #gened acc }
-          | SOME (Generated.GenFile.Rename _) => raise IllegalState
-          | SOME (Generated.GenFile.TopLevel _) => raise IllegalState
+          | SOME (GenFile.Rename _) => raise IllegalState
+          | SOME (GenFile.TopLevel _) => raise IllegalState
           | NONE => (
               if List.exists (fn s => s = "SML_LIB") used then
                 let
@@ -123,14 +123,14 @@ end = struct
         in
         (* a src file is only loaded once, so we can just output it directly *)
           case Generated.findPath (#gened acc) result of
-            SOME (Generated.GenFile.SML g) =>
+            SOME (GenFile.SML g) =>
               { cms = #cms acc, smls = g :: #smls acc, future = future
               , filter = #filter acc, gened = #gened acc }
-          | SOME (Generated.GenFile.CM g) =>
+          | SOME (GenFile.CM g) =>
               { cms = g :: #cms acc, smls = #smls acc, future = future
               , filter = #filter acc, gened = #gened acc }
-          | SOME (Generated.GenFile.Rename _) => raise IllegalState
-          | SOME (Generated.GenFile.TopLevel _) => raise IllegalState
+          | SOME (GenFile.Rename _) => raise IllegalState
+          | SOME (GenFile.TopLevel _) => raise IllegalState
           | NONE =>
             let
               val () = print "\tCouldn't find cached version, generating...\n"
@@ -142,7 +142,7 @@ end = struct
               , future = WFile.futureImports wfile'
               , filter = #filter acc
               , gened = Generated.insert (#gened acc)
-                          (SOME path, Generated.GenFile.SML wfile')
+                          (SOME path, GenFile.SML wfile')
               }
             end
         end
@@ -173,7 +173,7 @@ end = struct
               )
         in
           case Generated.findName gened old_cm of
-            SOME (Generated.GenFile.CM g) =>
+            SOME (GenFile.CM g) =>
               { cms = g::cms, smls = smls, future = future
               , filter = ([], false), gened = gened }
           | _ => raise Fail "Couldn't find file that should be generated..."
@@ -224,13 +224,13 @@ end = struct
         , smls = []
         , future = future
         , filter = filter
-        , gened = Generated.insert gened (cfile, Generated.GenFile.CM cm)
+        , gened = Generated.insert gened (cfile, GenFile.CM cm)
         }
       fun appFilter () =
         let
           val rename_file = FileName.newSML ()
           val cm' = CMFile.addSource cm rename_file
-          val rename = Generated.GenFile.Rename (rename_file, #1 filter)
+          val rename = GenFile.Rename (rename_file, #1 filter)
         in
           { cms = [cm']
           , smls = []
@@ -238,7 +238,7 @@ end = struct
           , filter = ([], false)
           , gened = Generated.insert
                       (Generated.insert gened (NONE, rename))
-                      (cfile, Generated.GenFile.CM cm')
+                      (cfile, GenFile.CM cm')
           }
         end
     in
@@ -262,7 +262,7 @@ end = struct
       val res = create (dir, pathmap) (SOME file) emptyAcc basdec
 
       val convertCM = Option.mapPartial (
-        Generated.GenFile.apply (SOME, fn _ => NONE, fn _ => NONE, fn _ => NONE)
+        GenFile.apply (SOME, fn _ => NONE, fn _ => NONE, fn _ => NONE)
       )
     in
       { all = Generated.all (#gened res)

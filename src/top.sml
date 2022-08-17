@@ -49,7 +49,7 @@ fun repl results =
       case file_opt of
         NONE => ""
       | SOME file =>
-          dir ^ "/" ^ (FileName.toString o Generated.GenFile.name) file
+          dir ^ "/" ^ (FileName.toString o GenFile.name) file
     fun mkSources ({cm, top}, out) =
       (mkSource out cm) ^ " " ^ (mkSource out (SOME top))
     val sources =

@@ -5,8 +5,8 @@ structure Molasses : sig
   val defaultDirectory : string -> outdir
 
   type result =
-    { cm : Generated.GenFile.t option
-    , top : Generated.GenFile.t
+    { cm : GenFile.t option
+    , top : GenFile.t
     }
 
   val makeTo : MLtonPathMap.t -> string -> outdir -> result
@@ -30,19 +30,19 @@ end = struct
     end
 
   type result =
-    { cm : Generated.GenFile.t option
-    , top : Generated.GenFile.t
+    { cm : GenFile.t option
+    , top : GenFile.t
     }
 
   local
     fun writeOut dir out =
       let
         val file = dir ^ "/" ^ (
-            FileName.toString (Generated.GenFile.name out)
+            FileName.toString (GenFile.name out)
           )
         val outstream = TextIO.openOut file
       in
-        TextIO.output (outstream, Generated.GenFile.toString out);
+        TextIO.output (outstream, GenFile.toString out);
         TextIO.output (outstream, "\n");
         TextIO.closeOut outstream
       end
@@ -56,9 +56,9 @@ end = struct
         val write = fn (out, _) => writeOut outdir out
       in
         List.foldl write () all;
-        write (Generated.GenFile.TopLevel toplevel, ());
-        { cm = Option.map Generated.GenFile.CM cm
-        , top = Generated.GenFile.TopLevel toplevel
+        write (GenFile.TopLevel toplevel, ());
+        { cm = Option.map GenFile.CM cm
+        , top = GenFile.TopLevel toplevel
         }
       end
 

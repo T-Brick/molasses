@@ -1,35 +1,5 @@
 structure Generated :> sig
 
-  structure GenFile : sig
-    type rename = FileName.t * StrExport.t list
-    type toplevel = FileName.t * Import.t list
-
-    datatype generated =
-        CM of CMFile.t
-      | SML of WrappedFile.t
-      | Rename of rename
-      | TopLevel of toplevel
-    type t = generated
-
-    val apply : (CMFile.t -> 'a)
-              * (WrappedFile.t -> 'a)
-              * (rename -> 'a)
-              * (toplevel -> 'a)
-              -> generated
-              -> 'a
-    val map : (CMFile.t -> CMFile.t)
-            * (WrappedFile.t -> WrappedFile.t)
-            * (rename -> rename)
-            * (toplevel -> toplevel)
-            -> generated
-            -> generated
-
-    val name : generated -> FileName.t
-    val toString : generated -> string
-
-    include MARKER where type marker = generated
-  end
-
   type gdict
   type t = gdict
 
@@ -52,55 +22,6 @@ structure Generated :> sig
 
 end = struct
 
-  structure GenFile =
-  struct
-    type rename = FileName.t * StrExport.t list
-    type toplevel = FileName.t * Import.t list
-
-    datatype generated =
-        CM of CMFile.t
-      | SML of WrappedFile.t
-      | Rename of rename
-      | TopLevel of toplevel
-    type t = generated
-
-    fun apply (cf,sf,rf,tf) g =
-      case g of
-        CM cm => cf cm
-      | SML wf => sf wf
-      | Rename r => rf r
-      | TopLevel t => tf t
-    fun map (cf,sf,rf,tf) =
-      apply (CM o cf, SML o sf, Rename o rf, TopLevel o tf)
-
-    val name =
-      apply (CMFile.name, WrappedFile.name, fn (p,_) => p, fn (p,_) => p)
-    val toString =
-      apply ( CMFile.toString
-            , WrappedFile.toString
-            , fn (_, v) => String.concatWith "\n"
-                             (List.map StrExport.toRenameString v)
-            , fn (_, v) => String.concatWith "\n"
-                             (List.map Import.toString v)
-            )
-
-    type marker = generated
-    fun mark (src, g) =
-      map ( fn cm => CMFile.mark (src, cm)
-          , fn wf => WrappedFile.mark (src, wf)
-          , fn x => x
-          , fn x => x
-          ) g
-    fun createMark (src, g) =
-      map ( fn cm => CMFile.createMark (src, cm)
-          , fn wf => WrappedFile.createMark (src, wf)
-          , fn x => x
-          , fn x => x
-          ) g
-    fun removeMark g =
-      map (CMFile.removeMark, WrappedFile.removeMark, fn x => x, fn x => x) g
-  end
-
   structure StringDict = Dict(
     type t = string
     val compare = String.compare
@@ -109,7 +30,7 @@ end = struct
   exception NotFound = StringDict.NotFound
 
   (* first is all real files, second is all generated files *)
-  type gdict = GenFile.t StringDict.t * GenFile.t StringDict.t
+  type gdict = FileName.t StringDict.t * GenFile.t StringDict.t
   type t = gdict
 
   val empty = (StringDict.empty, StringDict.empty)
@@ -121,17 +42,19 @@ end = struct
       NONE => ( StringDict.empty
               , StringDict.singleton ((FileName.toString o GenFile.name) g, g)
               )
-    | SOME f => ( StringDict.singleton (FilePath.toUnixPath f, g)
+    | SOME f => ( StringDict.singleton (FilePath.toUnixPath f, GenFile.name g)
                 , StringDict.singleton ((FileName.toString o GenFile.name) g, g)
                 )
   fun insert (d,l) (fopt, g) =
     case fopt of
       NONE => (d, StringDict.insert l ((FileName.toString o GenFile.name) g, g))
-    | SOME f => ( StringDict.insert d (FilePath.toUnixPath f, g)
+    | SOME f => ( StringDict.insert d (FilePath.toUnixPath f, GenFile.name g)
                 , StringDict.insert l ((FileName.toString o GenFile.name) g, g))
 
-  fun findPath (d, _) = StringDict.find d o FilePath.toUnixPath
-  fun findName (_, l) = StringDict.find l o FileName.toString
+  fun find (_,l) = StringDict.find l o FileName.toString
+  fun findPath (d, l) =
+    Option.mapPartial (find (d,l)) o StringDict.find d o FilePath.toUnixPath
+  val findName = find
   fun all (_, l) = StringDict.listItems l
 
   fun join ((d1, l1), (d2, l2)) =
@@ -139,13 +62,10 @@ end = struct
 
   type marker = gdict
   fun mark (src,(d,l)) =
-    ( StringDict.map (fn x => GenFile.mark (src, x)) d
-    , StringDict.map (fn x => GenFile.mark (src, x)) l )
+    ( d, StringDict.map (fn x => GenFile.mark (src, x)) l )
   fun createMark (src, (d,l)) =
-    ( StringDict.map (fn x => GenFile.createMark (src, x)) d
-    , StringDict.map (fn x => GenFile.createMark (src, x)) l )
+    ( d, StringDict.map (fn x => GenFile.createMark (src, x)) l )
   fun removeMark (d,l) =
-    ( StringDict.map GenFile.removeMark d
-    , StringDict.map GenFile.removeMark l )
+    ( d, StringDict.map GenFile.removeMark l )
 
 end
