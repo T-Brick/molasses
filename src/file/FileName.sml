@@ -23,9 +23,6 @@ end = struct
   val sml_counter = ref 0
   val cm_counter  = ref 1
 
-  val sml_name = "molasses-file"
-  val cm_name  = "molasses-sources"
-
   fun newSML () = SML (!sml_counter before sml_counter := !sml_counter + 1)
   fun newCM  () = CM  (!cm_counter  before cm_counter  := !cm_counter  + 1)
   val fromLibrary = Lib o LibraryMap.convert
@@ -38,8 +35,8 @@ end = struct
   val isLib = fn Lib _ => true | _ => false
 
   val toString =
-   fn SML n => sml_name ^ Int.toString n ^ ".sml"
-    | CM  n => cm_name  ^ Int.toString n ^ ".cm"
+   fn SML n => (#get Control.sml_name ()) ^ Int.toString n ^ ".sml"
+    | CM  n => (#get Control.cm_name  ()) ^ Int.toString n ^ ".cm"
     | Lib s => s
   val eq =
    fn (SML n, SML m) => n = m

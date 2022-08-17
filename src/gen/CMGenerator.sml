@@ -274,7 +274,7 @@ end = struct
     in
       { all = Generated.all (#gened res)
       , cm = convertCM (Generated.findName (#gened res) top_cm)
-      , toplevel = (FileName.newSML (), (#2 o #future) res)
+      , toplevel = (FileName.newSML (), (List.rev o #2 o #future) res)
       }
     end
 

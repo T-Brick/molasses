@@ -4,6 +4,7 @@
 ../util/sources.mlb
 ../extract/sources.mlb
 
+FileName.sml
 WrappedFile.sml
 CMFile.sml
 GenFile.sml
