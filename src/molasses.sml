@@ -8,7 +8,7 @@ structure Molasses : sig
 
   type result =
     { cm : GenFile.t option
-    , top : GenFile.t
+    , top : GenFile.t list
     }
 
   val makeTo : MLtonPathMap.t -> string -> outdir -> result
@@ -36,7 +36,7 @@ end = struct
 
   type result =
     { cm : GenFile.t option
-    , top : GenFile.t
+    , top : GenFile.t list
     }
 
   local
@@ -61,10 +61,17 @@ end = struct
         val write = fn (out, _) => writeOut outdir out
       in
         List.foldl write () all;
-        write (GenFile.TopLevel toplevel, ());
-        { cm = Option.map GenFile.CM cm
-        , top = GenFile.TopLevel toplevel
-        }
+        case cm of
+          NONE => (* no cm implies all top-level *)
+            { cm = NONE
+            , top = all
+            }
+        | SOME cm_f => (
+          write (GenFile.TopLevel toplevel, ());
+          { cm = SOME (GenFile.CM cm_f)
+          , top = [ GenFile.TopLevel toplevel ]
+          }
+        )
       end
 
     fun checkFile file =

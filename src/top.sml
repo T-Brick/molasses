@@ -51,7 +51,8 @@ fun repl results =
       | SOME file =>
           dir ^ "/" ^ (FileName.toString o GenFile.name) file
     fun mkSources ({cm, top}, out) =
-      (mkSource out cm) ^ " " ^ (mkSource out (SOME top))
+      (mkSource out cm) ^ " "
+      ^ (String.concatWith " " (List.map (mkSource out o SOME) top))
     val sources =
       case outputs of
         [] =>

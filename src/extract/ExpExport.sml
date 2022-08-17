@@ -89,7 +89,7 @@ struct
           (* "val " ^ (pp PrettyPat.showPat p) ^ " = " ^ (pp PrettyPat.showPat p) *)
           let
             fun mkVal x = "val " ^ x ^ " = " ^ x
-            val vars = List.map mkVal (extractVars p [])
+            val vars = List.rev (List.map mkVal (extractVars p []))
           in
             String.concatWith "\t" vars
           end
