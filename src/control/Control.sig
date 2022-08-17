@@ -9,4 +9,6 @@ sig
   val sml_name : string controller
   val cm_name  : string controller
   val str_name : string controller
+
+  val default_dir : string controller
 end

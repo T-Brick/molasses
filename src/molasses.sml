@@ -1,4 +1,7 @@
 structure Molasses : sig
+
+  structure Control : CONTROL
+
   exception UnknownFile of string
   type outdir = string
   val defaultDirectory : string -> outdir
@@ -14,16 +17,19 @@ structure Molasses : sig
   val makeTo' : string -> outdir -> result
   val make' : string -> result
 
-  structure Control : CONTROL
-
 end = struct
+
+  structure Control = Control
+
   exception UnknownFile of string
   type outdir = string
 
   fun defaultDirectory file =
     let
       val fp = FilePath.fromUnixPath file
-      val outdir = FilePath.toHostPath (FilePath.dirname fp) ^ "/.molasses"
+      val outdir =
+        FilePath.toHostPath (FilePath.dirname fp)
+        ^ "/" ^ #get Control.default_dir ()
     in
       outdir
     end
@@ -72,7 +78,5 @@ end = struct
     fun makeTo' file = makeTo (MLtonPathMap.getPathMap ()) file
     fun make' file = make (MLtonPathMap.getPathMap ()) file
   end
-
-  structure Control = Control
 
 end

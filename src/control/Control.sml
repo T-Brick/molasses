@@ -16,7 +16,9 @@ struct
   val sml_name = { get = fn () => !sml_name_ref, set = asgn sml_name_ref }
   val cm_name  = { get = fn () => !cm_name_ref , set = asgn cm_name_ref  }
   val str_name = { get = fn () => !str_name_ref, set = asgn str_name_ref }
-end
 
-(* override top-level definition *)
-val print : string -> unit = Control.print
+  val default_dir_ref : string ref = ref ".molasses"
+  val default_dir = { get = fn () => !default_dir_ref
+                    , set = asgn default_dir_ref }
+
+end

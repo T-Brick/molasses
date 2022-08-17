@@ -75,7 +75,7 @@ end = struct
           val file = (FilePath.normalize o FilePath.join) (dir, path)
           val {result, used} = MLtonPathMap.expandPath pathmap file
           val unixpath = FilePath.toUnixPath path
-          val () = print ("Loading file " ^ unixpath ^ "\n")
+          val () = Control.print ("Loading file " ^ unixpath ^ "\n")
           val future = #future acc
         in
         (* a src file is only loaded once, so we can just output it directly *)
@@ -118,7 +118,9 @@ end = struct
             MLtonPathMap.expandPath
               pathmap
               ((FilePath.normalize o FilePath.join) (dir, path))
-          val () = print ("Loading file " ^ (FilePath.toUnixPath result) ^ "\n")
+          val () = Control.print (
+            "Loading file " ^ (FilePath.toUnixPath result) ^ "\n"
+          )
           val future = #future acc
         in
         (* a src file is only loaded once, so we can just output it directly *)
@@ -133,7 +135,8 @@ end = struct
           | SOME (GenFile.TopLevel _) => raise IllegalState
           | NONE =>
             let
-              val () = print "\tCouldn't find cached version, generating...\n"
+              val () =
+                Control.print "\tCouldn't find cached version, generating...\n"
               val wfile = WFile.make future result
               val wfile' = WFile.createMark (MLBToken.getSource token, wfile)
             in
@@ -225,7 +228,7 @@ end = struct
             (CMFile.library tok_opt file (smls, corrected_cms))
             (#1 filter)
         )
-      val () = print ("Finished: " ^ FileName.toString file ^ "\n")
+      val () = Control.print ("Finished: " ^ FileName.toString file ^ "\n")
       fun noFilter () =
         { cms = [cm]
         , smls = []
@@ -261,7 +264,7 @@ end = struct
       val top_cm = FileName.resetCM ()
       val {result, used} = MLtonPathMap.expandPath pathmap file
       val unixpath = FilePath.toUnixPath file
-      val () = print ("Loading file " ^ unixpath ^ "\n")
+      val () = Control.print ("Loading file " ^ unixpath ^ "\n")
 
       val dir = FilePath.dirname result
       val source = Source.loadFromFile result
