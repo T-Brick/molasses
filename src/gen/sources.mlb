@@ -1,11 +1,3 @@
-../../parse-sml/src/parse-mlb/sources.mlb
-../../parse-sml/src/ast/sources.mlb
-../../parse-sml/src/pretty-print/sources.mlb
-
-../util/sources.mlb
-../extract/sources.mlb
-WrappedFile.sml
-CMFile.sml
-GenFile.sml
+../file/sources.mlb
 Generated.sml
 CMGenerator.sml
