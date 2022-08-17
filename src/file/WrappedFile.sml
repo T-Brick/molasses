@@ -78,15 +78,17 @@ end = struct
         handle exn => handleLexOrParseError exn
       val (exp_exports, future, str_exports) = FindTopDecs.find ast
       val future = future @ imports
-      val (future, istr) =
+      val (future, istr, istr_export) =
         case (exp_exports, str_exports) of
-            ([], []) => (future, SOME (InternalStruct.new (), []))
-          | ([], _)  => (future, NONE)
+            ([], []) => (future, SOME (InternalStruct.new (), []), [])
+          | ([], _)  => (future, NONE, [])
           | _  =>
             let
               val istr_t = InternalStruct.new ()
+              val istr_e =
+                [StrExport.Str (InternalStruct.toString istr_t, NONE)]
             in
-              (Import.Open istr_t :: future, SOME (istr_t, exp_exports))
+              (Import.Open istr_t :: future, SOME (istr_t, exp_exports), istr_e)
             end
     in
       Mark (source,
@@ -95,7 +97,7 @@ end = struct
           , imports = imports
           , istr    = istr
           , ast     = ast
-          , exports = str_exports
+          , exports = istr_export @ str_exports
           , future  = (fixities, future)
           })
     end

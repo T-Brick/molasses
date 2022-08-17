@@ -1,4 +1,3 @@
-
 structure Molasses : sig
   exception UnknownFile of string
   type outdir = string
