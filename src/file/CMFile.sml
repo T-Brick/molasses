@@ -18,6 +18,7 @@ structure CMFile : sig
   val addSources : cmfile -> FileName.t list  -> cmfile
 
   val restrictExports : cmfile -> StrExport.t list -> cmfile
+  val removeExports : cmfile -> cmfile list -> cmfile
   val normalize : cmfile -> cmfile
 
   include MARKER where type marker = cmfile
@@ -49,6 +50,9 @@ end = struct
     | Mark (src, cmfile') => Mark (src, map f cmfile')
 
   val name : cmfile -> FileName.t = app #name
+  val cmtype : cmfile -> cmtype = app #cmtype
+  val exports : cmfile -> StrExport.t list = app #exports
+  val sources : cmfile -> FileName.t list = app #sources
 
   fun addExport cmfile export =
     map (fn {name, cmtype, exports, sources} =>
@@ -70,17 +74,33 @@ end = struct
   val addExports = List.foldl (fn (e, f) => addExport f e)
   val addSources = List.foldl (fn (e, f) => addSource f e)
 
-  fun restrictExports cmfile exp_new =
-    case exp_new of
-      [] => cmfile
-    | _  =>
-        map (fn {name, cmtype, exports, sources} =>
-          { name = name
-          , cmtype = cmtype
-          , exports = exp_new
-          , sources = sources
-          }
-        ) cmfile
+  local
+    fun changeExports cmfile exp_new f =
+      case exp_new of
+          [] => cmfile
+        | _  =>
+            map (fn {name, cmtype, exports, sources} =>
+              { name = name
+              , cmtype = cmtype
+              , exports = f exports
+              , sources = sources
+              }
+            ) cmfile
+  in
+    fun restrictExports cmfile exp_new =
+      changeExports cmfile exp_new (fn _ => exp_new)
+
+    fun removeExports cmfile cmfiles =
+      let
+        val filter = List.concat (List.map exports cmfiles)
+      in
+        changeExports cmfile filter (
+          List.filter (fn e1 =>
+            not (List.exists (fn e2 => StrExport.eq (e1, e2)) filter)
+          )
+        )
+      end
+  end
 
   local
     val exports = app #exports

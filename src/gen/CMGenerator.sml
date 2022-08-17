@@ -103,7 +103,7 @@ end = struct
                   val dir = FilePath.dirname result
                   val source = Source.loadFromFile result
                   val Ast basdec = MLBParser.parse source
-                  val res = create (dir, pathmap) (SOME path) acc basdec
+                  val res = create (dir, pathmap) (SOME result) acc basdec
                 in
                   createMark
                     ( MLBToken.getSource token
@@ -142,7 +142,7 @@ end = struct
               , future = WFile.futureImports wfile'
               , filter = #filter acc
               , gened = Generated.insert (#gened acc)
-                          (SOME path, GenFile.SML wfile')
+                          (SOME result, GenFile.SML wfile')
               }
             end
         end
@@ -213,9 +213,16 @@ end = struct
             | SOME src => (fn x => createMark (src, x))
           ) o create fs NONE a ) d
       val {cms, smls, future, filter, gened} = List.foldl folder acc elems
+      (* remove duplicate entries in the export lists *)
+      val corrected_cms = cms
+        (* List.foldr (fn (c, acc) => (CMFile.removeExports c acc)::acc) [] cms *)
+      val corrected_gened = gened
+        (* List.foldl (fn (c,g) =>
+            Generated.insert g (NONE, GenFile.CM c)
+         ) gened cms *)
       val cm = CMFile.normalize
         ( CMFile.restrictExports
-            (CMFile.library tok_opt file (smls, cms))
+            (CMFile.library tok_opt file (smls, corrected_cms))
             (#1 filter)
         )
       val () = print ("Finished: " ^ FileName.toString file ^ "\n")
@@ -224,7 +231,7 @@ end = struct
         , smls = []
         , future = future
         , filter = filter
-        , gened = Generated.insert gened (cfile, GenFile.CM cm)
+        , gened = Generated.insert corrected_gened (cfile, GenFile.CM cm)
         }
       fun appFilter () =
         let
@@ -237,7 +244,7 @@ end = struct
           , future = future
           , filter = ([], false)
           , gened = Generated.insert
-                      (Generated.insert gened (NONE, rename))
+                      (Generated.insert corrected_gened (NONE, rename))
                       (cfile, GenFile.CM cm')
           }
         end
