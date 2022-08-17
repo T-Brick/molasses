@@ -62,7 +62,9 @@ fun repl results =
       | _  => ListPair.map mkSources (results, outputs)
     val cmd = repl_cmd ^ " " ^ String.concatWith " " sources
   in
-    OS.Process.exit (OS.Process.system cmd)
+    if OS.Process.isSuccess (OS.Process.system cmd)
+    then OS.Process.exit OS.Process.success
+    else OS.Process.exit OS.Process.failure
   end
 
 val results = if doHelp then help () else run ()
