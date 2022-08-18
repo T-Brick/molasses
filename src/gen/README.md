@@ -20,12 +20,16 @@ hopefully will limit confusion for students.
 
 ## Implementation
 
-The file [`Generator.sig`](Generator.sig) defines two generators, the
-`INTERNAL_GENERATOR` and the (external) `GENERATOR`. The file
-[`Generator.fun`](Generator.fun) takes in an internal representation and
-creates the external representation.
+The signature [`GENERATOR`](Generator.sig) defines an external generator and the
+signature [`INTERNAL_GENERATOR`](internal/InternalGenerator.sig) defines an
+internal generator. The file [`Generator.fun`](Generator.fun) takes in an
+internal representation and creates the external representation.
+
+This is all managed by the [`GenDriver`](GenDriver.sml) which selects whichever
+generator to run when a file is needed to be converted.
 
 Currently two internal generators are defined:
-- [`CMGenerator`](CMGenerator.sml) which is the fully functional transpiler
-- [`SeqGenerator`](SeqGenerator.sml) which defines a generator which does not
-generate CM files, rather a list of SML files to load.
+- [`CMGenerator`](internal/CMGenerator.sml) which is the fully functional
+transpiler and generates the appropriate SML and CM files to run.
+- [`SeqGenerator`](internal/SeqGenerator.sml) which defines a generator which
+does not generate CM files, rather a list of SML files to load.

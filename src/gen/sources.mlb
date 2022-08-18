@@ -1,11 +1,19 @@
 ../file/sources.mlb
 Generated.sml
 
-GeneratorUtil.sig
-GeneratorUtil.sml
+local
+  util/GeneratorUtil.sig
+  util/GeneratorUtil.sml
 
-Generator.sig
-Generator.fun
+  Generator.sig
 
-CMGenerator.sml
-SeqGenerator.sml
+  internal/InternalGenerator.sig
+  internal/CMGenerator.sml
+  internal/SeqGenerator.sml
+
+  Generator.fun
+
+  GenDriver.sml
+in
+  structure GenDriver
+end
