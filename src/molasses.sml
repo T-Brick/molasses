@@ -20,6 +20,7 @@ structure Molasses : sig
 end = struct
 
   structure Control = Control
+  structure CMGen = MkGenerator(CMGenerator)
 
   exception UnknownFile of string
   type outdir = string
@@ -55,7 +56,7 @@ end = struct
     fun maker pathmap file outdir =
       let
         val fp = FilePath.fromUnixPath file
-        val { all, cm, toplevel } = CMGenerator.generate pathmap fp
+        val { all, cm, toplevel } = CMGen.generate pathmap fp
         val _ = OS.Process.system ("rm -rf " ^ outdir)
         val _ = OS.Process.system ("mkdir " ^ outdir)
         val write = fn (out, _) => writeOut outdir out

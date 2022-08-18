@@ -1,3 +1,10 @@
 ../file/sources.mlb
 Generated.sml
+
+GeneratorUtil.sig
+GeneratorUtil.sml
+
+Generator.sig
+Generator.fun
+
 CMGenerator.sml

@@ -1,16 +1,5 @@
-structure CMGenerator : sig
-  exception Unsupported of string
-
-  type output =
-    { all : GenFile.t list
-    , cm : CMFile.t option
-    , toplevel : FileName.t * Import.t list
-    }
-
-  val generate : MLtonPathMap.t -> FilePath.t -> output
-end = struct
-  open MLBAst
-
+structure CMGenerator :> INTERNAL_GENERATOR =
+struct
   structure WFile = WrappedFile
 
   exception Unsupported of string
@@ -42,7 +31,50 @@ end = struct
       ([], []) => true
     | _ => false
 
-  fun mkFilter acc kind vals =
+  fun createMark (source, {cms, smls, future, filter, gened}) =
+    { cms = List.map (fn x => CMFile.createMark (source, x)) cms
+    , smls = List.map (fn x => WFile.createMark (source, x)) smls
+    , future = future
+    , filter =
+        ( List.map (fn x => StrExport.createMark (source, x)) (#1 filter)
+        , #2 filter )
+    , gened = Generated.createMark (source, gened)
+    }
+
+  fun getFuture ({future, ...} : acc) = future
+  fun getGened ({gened, ...} : acc) = gened
+
+  fun foundSMLCache (acc : acc) (g : WFile.t) =
+    { cms = #cms acc, smls = g :: #smls acc, future = #future acc
+    , filter = #filter acc, gened = #gened acc }
+  fun foundCMCache (acc : acc) (g : CMFile.t) =
+    { cms = g :: #cms acc, smls = #smls acc, future = #future acc
+    , filter = #filter acc, gened = #gened acc }
+
+  fun foundLibrary (acc : acc) (wfile : WFile.t) =
+    { cms = #cms acc, smls = wfile :: #smls acc, future = #future acc
+    , filter = #filter acc, gened = #gened acc }
+
+  fun makeSML (dir, pathmap) (acc : acc) create result =
+    let
+      val wfile = WFile.make (#future acc) result
+    in
+      { cms = #cms acc
+      , smls = wfile :: #smls acc
+      , future = WFile.futureImports wfile
+      , filter = #filter acc
+      , gened = Generated.insert (#gened acc)
+                  (SOME result, GenFile.SML wfile)
+      }
+    end
+  fun makeMLB (_, pathmap) (acc : acc) create result =
+    let
+      val (dir, MLBAst.Ast basdec) = GeneratorUtil.getAst result
+    in
+      create (dir, pathmap) (SOME result) acc basdec
+    end
+
+  fun makeFilter (acc : acc) kind vals =
     { cms = #cms acc
     , smls = #smls acc
     , future = #future acc (* TODO Change I think *)
@@ -54,161 +86,7 @@ end = struct
     , gened = #gened acc
     }
 
-  fun createMark (source, {cms, smls, future, filter, gened}) =
-    { cms = List.map (fn x => CMFile.createMark (source, x)) cms
-    , smls = List.map (fn x => WFile.createMark (source, x)) smls
-    , future = future
-    , filter =
-        ( List.map (fn x => StrExport.createMark (source, x)) (#1 filter)
-        , #2 filter )
-    , gened = Generated.createMark (source, gened)
-    }
-
-  fun create (fs as (dir, pathmap)) cfile acc basdec =
-    case basdec of
-      DecEmpty => acc
-    | DecMultiple {elems, ...} =>
-        mkNewCM fs cfile NONE acc (FileName.newCM ())
-          ((Seq.toList o Seq.map (fn x => (x, NONE))) elems)
-    | DecPathMLB {path, token} =>
-        let
-          val file = (FilePath.normalize o FilePath.join) (dir, path)
-          val {result, used} = MLtonPathMap.expandPath pathmap file
-          val unixpath = FilePath.toUnixPath path
-          val () = Control.print ("Loading file " ^ unixpath ^ "\n")
-          val future = #future acc
-        in
-        (* a src file is only loaded once, so we can just output it directly *)
-          case Generated.findPath (#gened acc) result of
-            SOME (GenFile.SML g) =>
-              { cms = #cms acc, smls = g :: #smls acc, future = future
-              , filter = #filter acc, gened = #gened acc }
-          | SOME (GenFile.CM g) =>
-              { cms = g :: #cms acc, smls = #smls acc, future = future
-              , filter = #filter acc, gened = #gened acc }
-          | SOME (GenFile.Rename _) => raise IllegalState
-          | SOME (GenFile.TopLevel _) => raise IllegalState
-          | NONE => (
-              if List.exists (fn s => s = "SML_LIB") used then
-                let
-                  val wfile = WFile.makeLib unixpath future
-                  val wfile' =
-                    WFile.createMark (MLBToken.getSource token, wfile)
-                in
-                  { cms = #cms acc, smls = wfile' :: #smls acc, future = future
-                  , filter = #filter acc, gened = #gened acc }
-                end
-              else
-                let
-                  val dir = FilePath.dirname result
-                  val source = Source.loadFromFile result
-                  val Ast basdec = MLBParser.parse source
-                  val res = create (dir, pathmap) (SOME result) acc basdec
-                in
-                  createMark
-                    ( MLBToken.getSource token
-                    , res
-                    )
-                end
-          )
-        end
-    | DecPathSML {path, token} =>
-        let
-          val {result, used} =
-            MLtonPathMap.expandPath
-              pathmap
-              ((FilePath.normalize o FilePath.join) (dir, path))
-          val () = Control.print (
-            "Loading file " ^ (FilePath.toUnixPath result) ^ "\n"
-          )
-          val future = #future acc
-        in
-        (* a src file is only loaded once, so we can just output it directly *)
-          case Generated.findPath (#gened acc) result of
-            SOME (GenFile.SML g) =>
-              { cms = #cms acc, smls = g :: #smls acc, future = future
-              , filter = #filter acc, gened = #gened acc }
-          | SOME (GenFile.CM g) =>
-              { cms = g :: #cms acc, smls = #smls acc, future = future
-              , filter = #filter acc, gened = #gened acc }
-          | SOME (GenFile.Rename _) => raise IllegalState
-          | SOME (GenFile.TopLevel _) => raise IllegalState
-          | NONE =>
-            let
-              val () =
-                Control.print "\tCouldn't find cached version, generating...\n"
-              val wfile = WFile.make future result
-              val wfile' = WFile.createMark (MLBToken.getSource token, wfile)
-            in
-              { cms = #cms acc
-              , smls = wfile' :: #smls acc
-              , future = WFile.futureImports wfile'
-              , filter = #filter acc
-              , gened = Generated.insert (#gened acc)
-                          (SOME result, GenFile.SML wfile')
-              }
-            end
-        end
-    | DecBasis _ => raise Unsupported "MLB basis dec not supported"
-    | DecLocalInEnd { locall, basdec1, inn, basdec2, endd } =>
-        (* Idea - split local into 2 CM files: all the information prior to the
-         * local dec and all the parts in the local declaration. Then wrap all
-         * these into a new CM file, referencing the two CM files we just def'd
-         *)
-        let
-          val new_cm = FileName.newCM ()
-          val (old_cm, new_acc) =
-            if isAccEmpty acc
-            then (new_cm, acc)
-            else
-              let
-                val old = FileName.newCM ()
-              in
-                (old, mkNewCM fs cfile NONE acc old [])
-              end
-          val {cms, smls, future, filter, gened} =
-            createMark
-              ( MLBToken.getSource endd
-              , mkNewCM fs NONE ((SOME o MLBToken.getSource) endd)
-                  new_acc (new_cm)
-                  [ (basdec1, (SOME o MLBToken.getSource) locall)
-                  , (basdec2, (SOME o MLBToken.getSource) inn) ]
-              )
-        in
-          case Generated.findName gened old_cm of
-            SOME (GenFile.CM g) =>
-              { cms = g::cms, smls = smls, future = future
-              , filter = ([], false), gened = gened }
-          | _ => raise Fail "Couldn't find file that should be generated..."
-        end
-    | DecOpen _ => raise Unsupported "MLB open dec not supported"
-    | DecStructure { structuree, elems, delims } =>
-        mkFilter acc
-          (fn e =>
-            StrExport.Mark (MLBToken.getSource structuree, StrExport.Str e))
-          ( List.map
-              (fn v => (#strid v, Option.map #strid (#eqstrid v)))
-              (Seq.toList elems)
-          )
-    | DecSignature { signaturee, elems, delims } =>
-        mkFilter acc
-          (fn e =>
-            StrExport.Mark (MLBToken.getSource signaturee, StrExport.Sig e))
-          ( List.map
-              (fn v => (#sigid v, Option.map #sigid (#eqsigid v)))
-              (Seq.toList elems)
-          )
-    | DecFunctor { functorr, elems, delims } =>
-        mkFilter acc
-          (fn e =>
-            StrExport.Mark (MLBToken.getSource functorr, StrExport.Fun e))
-          ( List.map
-              (fn v => (#funid v, Option.map #funid (#eqfunid v)))
-              (Seq.toList elems)
-          )
-    | DecAnn _ => raise Unsupported "MLB annotations not supported"
-    | DecUnderscorePrim _ => raise Unsupported "MLB underscore not supported"
-  and mkNewCM (fs as (dir, pathmap)) cfile tok_opt acc file elems =
+  fun makeList (fs as (dir, pathmap)) cfile tok_opt create acc file elems =
     let
       fun folder ((d, src_opt), a) =
         ( (case src_opt of
@@ -258,27 +136,36 @@ end = struct
       | (_, true)  => appFilter ()
     end
 
-  fun generate pathmap file =
+  (* Idea - split local into 2 CM files: all the information prior to the
+   * local dec and all the parts in the local declaration. Then wrap all
+   * these into a new CM file, referencing the two CM files we just def'd
+   *)
+  fun makeLocal (dir,pathmap) cfile create acc
+                (locall,inn,endd) (basdec1,basdec2) =
     let
-      val _ = FileName.resetSML ()
-      val top_cm = FileName.resetCM ()
-      val {result, used} = MLtonPathMap.expandPath pathmap file
-      val unixpath = FilePath.toUnixPath file
-      val () = Control.print ("Loading file " ^ unixpath ^ "\n")
-
-      val dir = FilePath.dirname result
-      val source = Source.loadFromFile result
-      val Ast basdec = MLBParser.parse source
-      val res = create (dir, pathmap) (SOME file) emptyAcc basdec
-
-      val convertCM = Option.mapPartial (
-        GenFile.apply (SOME, fn _ => NONE, fn _ => NONE, fn _ => NONE)
-      )
+      val new_cm = FileName.newCM ()
+      val (old_cm, new_acc) =
+        if isAccEmpty acc
+        then (new_cm, acc)
+        else
+          let
+            val old = FileName.newCM ()
+          in
+            (old, makeList (dir, pathmap) cfile NONE create acc old [])
+          end
+      val {cms, smls, future, filter, gened} =
+        createMark
+          ( MLBToken.getSource endd
+          , makeList (dir, pathmap) NONE ((SOME o MLBToken.getSource) endd)
+              create new_acc (new_cm)
+              [ (basdec1, (SOME o MLBToken.getSource) locall)
+              , (basdec2, (SOME o MLBToken.getSource) inn) ]
+          )
     in
-      { all = Generated.all (#gened res)
-      , cm = convertCM (Generated.findName (#gened res) top_cm)
-      , toplevel = (FileName.newSML (), (List.rev o #2 o #future) res)
-      }
+      case Generated.findName gened old_cm of
+        SOME (GenFile.CM g) =>
+          { cms = g::cms, smls = smls, future = future
+          , filter = ([], false), gened = gened }
+      | _ => raise Fail "Couldn't find file that should be generated..."
     end
-
 end
