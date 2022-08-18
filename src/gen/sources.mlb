@@ -8,3 +8,4 @@ Generator.sig
 Generator.fun
 
 CMGenerator.sml
+SeqGenerator.sml
