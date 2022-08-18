@@ -21,4 +21,7 @@ struct
   val default_dir = { get = fn () => !default_dir_ref
                     , set = asgn default_dir_ref }
 
+  datatype mode = Sequential | Full | Dynamic
+  val mode_ref : mode ref = ref Dynamic
+  val mode = { get = fn () => !mode_ref, set = asgn mode_ref }
 end

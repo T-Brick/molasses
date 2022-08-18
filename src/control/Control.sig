@@ -11,4 +11,7 @@ sig
   val str_name : string controller
 
   val default_dir : string controller
+
+  datatype mode = Sequential | Full | Dynamic
+  val mode : mode controller
 end
