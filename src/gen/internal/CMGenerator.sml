@@ -31,7 +31,7 @@ struct
       ([], []) => true
     | _ => false
 
-  fun createMark (source, {cms, smls, future, filter, gened}) =
+  fun createMark (source, {cms, smls, future, filter, gened} : acc) =
     { cms = List.map (fn x => CMFile.createMark (source, x)) cms
     , smls = List.map (fn x => WFile.createMark (source, x)) smls
     , future = future
@@ -107,14 +107,14 @@ struct
             (#1 filter)
         )
       val () = Control.print ("Finished: " ^ FileName.toString file ^ "\n")
-      fun noFilter () =
+      fun noFilter () : acc =
         { cms = [cm]
         , smls = []
         , future = future
         , filter = filter
         , gened = Generated.insert corrected_gened (cfile, GenFile.CM cm)
         }
-      fun appFilter () =
+      fun appFilter () : acc =
         let
           val rename_file = FileName.newSML ()
           val cm' = CMFile.addSource cm rename_file

@@ -2,4 +2,4 @@ version = 1
 [workspace]
 root = "src/molasses.mlb"
 [workspace.path-vars]
-COMPAT = "mlton"
+COMPAT = { value = "mlton" }
