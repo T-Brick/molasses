@@ -25,7 +25,7 @@ end = struct
 
   fun newSML () = SML (!sml_counter before sml_counter := !sml_counter + 1)
   fun newCM  () = CM  (!cm_counter  before cm_counter  := !cm_counter  + 1)
-  val fromLibrary = Lib o LibraryMap.convert
+  fun fromLibrary s = (Lib o LibraryMap.convert (#get Control.libmap ())) s
 
   fun resetSML () = SML (sml_counter := 0; !sml_counter)
   fun resetCM () = CM (cm_counter := 1; !cm_counter)

@@ -17,6 +17,7 @@ struct
       val file = (FilePath.normalize o FilePath.join) (dir, path)
       val unixpath = FilePath.toUnixPath path
       val (result, used, _) = GeneratorUtil.getFile pathmap file
+      val isLibPathVar = LibraryMap.isLibraryPathVar (#get Control.libmap ())
     in
       (* a src file is only loaded once, so we can just output it directly *)
       case Generated.findPath (getGened acc) result of
@@ -25,7 +26,7 @@ struct
       | SOME (GenFile.Rename _)   => raise IllegalState
       | SOME (GenFile.TopLevel _) => raise IllegalState
       | NONE => (
-          if List.exists (fn s => s = "SML_LIB") used then
+          if List.exists isLibPathVar used then
             foundLibrary acc
               ( WFile.createMark ( MLBToken.getSource token
                                  , WFile.makeLib unixpath (getFuture acc) ) )

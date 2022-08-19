@@ -17,6 +17,19 @@ use the REPL, you can also pass in the `--repl` flag, which will generate the
 appropriate files and launch the SML/NJ REPL (using the command `rlwrap sml`),
 with the appropriate toplevel declarations already loaded.
 
+## Mapping Specific MLB Files
+
+It maybe the case that there are specific libraries that you already have CM's
+for, and thus making converting them unnecessary. Molasses provides a way to
+map specific files in MLB to a pre-defined CM counterpart.
+
+The file [example-libmap](example-libmap) demonstrates how to construct a
+mapping (in this case, the example is the SML basis, which is already loaded by
+default). The first line in the file consists of a list of space separated
+MLB Path Variables, which if they appear will trigger a lookup. The remaining
+lines are the file path as it appears in the MLB file, followed by one or more
+spaces, then the corresponding CM equivalent of the file.
+
 ## Limitations
 
 Currently there are a number of limitations, that will hopefully be reduced in

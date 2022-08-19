@@ -17,6 +17,8 @@ structure Molasses : sig
   val makeTo' : string -> outdir -> result
   val make' : string -> result
 
+  val loadLibraryMap : string -> unit
+
 end = struct
 
   structure Control = Control
@@ -85,5 +87,15 @@ end = struct
     fun makeTo' file = makeTo (MLtonPathMap.getPathMap ()) file
     fun make' file = make (MLtonPathMap.getPathMap ()) file
   end
+
+  fun loadLibraryMap path =
+    let
+      val file = FilePath.fromUnixPath path
+      val instream = TextIO.openIn (FilePath.toUnixPath file)
+      val text = TextIO.inputAll instream
+      val new_libmap = LibraryMap.addFromString (#get Control.libmap ()) text
+    in
+      #set Control.libmap new_libmap
+    end
 
 end

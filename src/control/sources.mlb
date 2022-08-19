@@ -1,3 +1,5 @@
-$(SML_LIB)/basis/basis.mlb
+../../parse-sml/src/base/sources.mlb
+
+LibraryMap.sml
 Control.sig
 Control.sml

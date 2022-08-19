@@ -7,8 +7,7 @@ struct
   val verbose_ref : bool ref = ref false
   val verbose = { get = fn () => !verbose_ref, set = asgn verbose_ref }
 
-  fun print s =
-    if #get verbose () then print s else ()
+  val print = fn s => if #get verbose () then print s else ()
 
   val sml_name_ref : string ref = ref "molasses-file"
   val cm_name_ref  : string ref = ref "molasses-sources"
@@ -24,4 +23,7 @@ struct
   datatype mode = Sequential | Full | Dynamic
   val mode_ref : mode ref = ref Dynamic
   val mode = { get = fn () => !mode_ref, set = asgn mode_ref }
+
+  val libmap_ref : LibraryMap.t ref = ref LibraryMap.default
+  val libmap = { get = fn () => !libmap_ref, set = asgn libmap_ref }
 end

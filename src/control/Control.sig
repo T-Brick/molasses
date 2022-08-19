@@ -14,4 +14,6 @@ sig
 
   datatype mode = Sequential | Full | Dynamic
   val mode : mode controller
+
+  val libmap : LibraryMap.t controller
 end

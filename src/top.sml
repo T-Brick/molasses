@@ -3,9 +3,11 @@ val help_msg =
 "Usage: molasses [ARGS] FILE ... FILE\n" ^
 "Optional arguments:\n\
 \  [-mlb-path-var 'K V'] Defining a mlb path variable.\n\
+\  [-libmap F]           Imports a libmap from F.\n\
 \  [-output D]           Outputs the file to directory D, specify multiple\n\
 \                        directories for multiple sources. If blank then uses\n\
 \                        '.molasses' where the source is located.\n\
+\  [-v]                  Verbose output.\n\
 \  [--repl]              Loads the files into a REPL after generating them.\n\
 \  [--repl-cmd C]        When loading the files into the REPL, use command C\n\
 \                        instead of the default 'rlwrap sml'\n\
@@ -13,17 +15,20 @@ val help_msg =
 \  [--help]              Prints this message.\n"
 
 val mlbPathVars = CommandLineArgs.parseStrings "mlb-path-var"
+val libmap_files = CommandLineArgs.parseStrings "libmap"
 val outputs = CommandLineArgs.parseStrings "output"
 val repl_cmd = CommandLineArgs.parseString "repl-cmd" "rlwrap sml"
 
 val doREPL = CommandLineArgs.parseFlag "repl"
 val doHelp = CommandLineArgs.parseFlag "help"
+val () = #set Control.verbose (CommandLineArgs.parseSingleFlag "v")
 
 val files = CommandLineArgs.positional ()
 
 val pathmap = MLtonPathMap.getPathMap ()
 val pathmap =
   List.concat (List.map MLtonPathMap.fromString mlbPathVars) @ pathmap
+val () = List.app (Molasses.loadLibraryMap) libmap_files
 
 fun help () = (
   print help_msg;
