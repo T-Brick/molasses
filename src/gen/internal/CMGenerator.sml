@@ -43,6 +43,7 @@ struct
 
   fun getFuture ({future, ...} : acc) = future
   fun getGened ({gened, ...} : acc) = gened
+  fun getAll ({gened, ...} : acc) = Generated.all gened
 
   fun foundSMLCache (acc : acc) (g : WFile.t) =
     { cms = #cms acc, smls = g :: #smls acc, future = #future acc

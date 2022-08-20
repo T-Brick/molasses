@@ -27,6 +27,7 @@ struct
 
   fun getFuture ({future, ...} : acc) = future
   fun getGened ({gened, ...} : acc) = gened
+  fun getAll ({smls, ...} : acc) = List.rev (List.map GenFile.SML smls)
 
   fun foundSMLCache acc g = acc
   fun foundCMCache acc g = raise IllegalState

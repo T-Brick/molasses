@@ -89,7 +89,7 @@ struct
         GenFile.apply (SOME, fn _ => NONE, fn _ => NONE, fn _ => NONE)
       )
     in
-      { all = Generated.all (getGened res)
+      { all = getAll res
       , cm = convertCM (Generated.findName (getGened res) top_cm)
       , toplevel = (FileName.newSML (), (List.rev o #2 o getFuture) res)
       }

@@ -1,31 +1,31 @@
 structure GenFile : sig
-    type rename = FileName.t * StrExport.t list
-    type toplevel = FileName.t * Import.t list
+  type rename = FileName.t * StrExport.t list
+  type toplevel = FileName.t * Import.t list
 
-    datatype generated =
-        CM of CMFile.t
-      | SML of WrappedFile.t
-      | Rename of rename
-      | TopLevel of toplevel
-    type t = generated
+  datatype generated =
+      CM of CMFile.t
+    | SML of WrappedFile.t
+    | Rename of rename
+    | TopLevel of toplevel
+  type t = generated
 
-    val apply : (CMFile.t -> 'a)
-              * (WrappedFile.t -> 'a)
-              * (rename -> 'a)
-              * (toplevel -> 'a)
-              -> generated
-              -> 'a
-    val map : (CMFile.t -> CMFile.t)
-            * (WrappedFile.t -> WrappedFile.t)
-            * (rename -> rename)
-            * (toplevel -> toplevel)
+  val apply : (CMFile.t -> 'a)
+            * (WrappedFile.t -> 'a)
+            * (rename -> 'a)
+            * (toplevel -> 'a)
             -> generated
-            -> generated
+            -> 'a
+  val map : (CMFile.t -> CMFile.t)
+          * (WrappedFile.t -> WrappedFile.t)
+          * (rename -> rename)
+          * (toplevel -> toplevel)
+          -> generated
+          -> generated
 
-    include MARKER where type marker = generated
+  include MARKER where type marker = generated
 
-    val name : generated -> FileName.t
-    val toString : generated -> string
+  val name : generated -> FileName.t
+  val toString : generated -> string
 end = struct
   type rename = FileName.t * StrExport.t list
   type toplevel = FileName.t * Import.t list

@@ -12,6 +12,7 @@ sig
 
   val getFuture : acc -> WrappedFile.future
   val getGened : acc -> Generated.t
+  val getAll : acc -> GenFile.t list
 
   val foundSMLCache : acc -> WrappedFile.t -> acc
   val foundCMCache : acc -> CMFile.t -> acc

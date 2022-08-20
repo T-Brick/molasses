@@ -42,24 +42,43 @@ end = struct
     }
 
   local
+    fun exists dir f =
+      let
+        val dirstream = OS.FileSys.openDir dir
+        fun findFile () =
+          case OS.FileSys.readDir dirstream of
+            NONE => (OS.FileSys.closeDir dirstream; false)
+          | SOME f' => f = f' orelse findFile ()
+      in
+        findFile ()
+      end
+
     fun writeOut dir out =
       let
-        val file = dir ^ "/" ^ (
-            FileName.toString (GenFile.name out)
-          )
-        val outstream = TextIO.openOut file
+        val filename = FileName.toString (GenFile.name out)
+        val () = Control.print ("Writing " ^ filename ^ "...\n")
+        val file = dir ^ "/" ^ filename
+        fun write () =
+          let
+            val outstream = TextIO.openOut file
+          in
+            TextIO.output (outstream, GenFile.toString out);
+            TextIO.output (outstream, "\n");
+            TextIO.closeOut outstream
+          end
       in
-        TextIO.output (outstream, GenFile.toString out);
-        TextIO.output (outstream, "\n");
-        TextIO.closeOut outstream
+        if exists (OS.Path.dir file) (OS.Path.file file)
+        then Control.print ("Tried writing " ^ filename ^ " which exists!\n")
+        else write ()
       end
 
     fun maker pathmap file outdir =
       let
         val fp = FilePath.fromUnixPath file
         val { all, cm, toplevel } = GenDriver.generate pathmap fp
+        (* TODO: replace with SML *)
         val _ = OS.Process.system ("rm -rf " ^ outdir)
-        val _ = OS.Process.system ("mkdir " ^ outdir)
+        val _ = OS.FileSys.mkDir outdir
         val write = fn (out, _) => writeOut outdir out
       in
         List.foldl write () all;
@@ -69,10 +88,10 @@ end = struct
             , top = all
             }
         | SOME cm_f => (
-          write (GenFile.TopLevel toplevel, ());
-          { cm = SOME (GenFile.CM cm_f)
-          , top = [ GenFile.TopLevel toplevel ]
-          }
+            write (GenFile.TopLevel toplevel, ());
+            { cm = SOME (GenFile.CM cm_f)
+            , top = [ GenFile.TopLevel toplevel ]
+            }
         )
       end
 
