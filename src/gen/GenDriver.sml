@@ -16,10 +16,10 @@ struct
       Control.Sequential => SeqGen.generate pathmap file
     | Control.Full => CMGen.generate pathmap file
     | Control.Dynamic => (
-      (SeqGen.generate pathmap file)
-      handle SeqGen.Unsupported _ => (
-        Control.print "Couldn't load sequentially... trying full\n";
-        CMGen.generate pathmap file
+      (SeqGen.generate pathmap file) handle SeqGen.Unsupported _ => (
+          Control.print "Couldn't load sequentially... trying Full\n";
+          #set Control.mode Control.Full;
+          generate pathmap file
       )
     )
 

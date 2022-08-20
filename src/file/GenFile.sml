@@ -24,6 +24,11 @@ structure GenFile : sig
 
   include MARKER where type marker = generated
 
+  val isSML : generated -> bool
+  val isCM : generated -> bool
+  val isRename : generated -> bool
+  val isTopLevel : generated -> bool
+
   val name : generated -> FileName.t
   val toString : generated -> string
 end = struct
@@ -45,6 +50,11 @@ end = struct
     | TopLevel t => tf t
   fun map (cf,sf,rf,tf) =
     apply (CM o cf, SML o sf, Rename o rf, TopLevel o tf)
+
+  val isSML      = fn SML _      => true | _ => false
+  val isCM       = fn CM _       => true | _ => false
+  val isRename   = fn Rename _   => true | _ => false
+  val isTopLevel = fn TopLevel _ => true | _ => false
 
   val name =
     apply (CMFile.name, WrappedFile.name, fn (p,_) => p, fn (p,_) => p)

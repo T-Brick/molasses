@@ -10,6 +10,8 @@ sig
   val cm_name  : string controller
   val str_name : string controller
 
+  val use_source : bool controller
+
   val default_dir : string controller
 
   datatype mode = Sequential | Full | Dynamic

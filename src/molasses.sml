@@ -75,22 +75,39 @@ end = struct
       let
         val fp = FilePath.fromUnixPath file
         val { all, cm, toplevel } = GenDriver.generate pathmap fp
+
         (* TODO: replace with SML *)
-        val _ = OS.Process.system ("rm -rf " ^ outdir)
-        val _ = OS.FileSys.mkDir outdir
+        fun prepDirectory () =
+          ( OS.Process.system ("rm -rf " ^ outdir)
+          ; OS.FileSys.mkDir outdir
+          )
         val abs_outdir = OS.Path.mkAbsolute {path=outdir, relativeTo="/"}
         val relative_outdir =
           OS.Path.mkRelative {path=OS.Path.dir file, relativeTo=abs_outdir}
-        val write = fn (out, _) => writeOut (outdir, relative_outdir) out
+
+        fun write (out, i) =
+          case ( #get Control.use_source () andalso GenFile.isSML out
+               , #get Control.mode ()
+               ) of
+            (true, Control.Sequential) => i
+          | (true, Control.Dynamic)    => i
+          | _ =>
+            ( if i = 0 then prepDirectory () else ()
+            ; writeOut (outdir, relative_outdir) out
+            ; i + 1
+            )
+
+        val total = List.foldl write 0 all
+        val () = Control.print
+          ("\nWrote " ^ (Int.toString total) ^ " non-TopLevel files!\n\n")
       in
-        List.foldl write () all;
         case cm of
           NONE => (* no cm implies all top-level *)
             { cm = NONE
             , top = all
             }
         | SOME cm_f => (
-            write (GenFile.TopLevel toplevel, ());
+            write (GenFile.TopLevel toplevel, total + 1);
             { cm = SOME (GenFile.CM cm_f)
             , top = [ GenFile.TopLevel toplevel ]
             }

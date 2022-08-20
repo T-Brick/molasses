@@ -16,6 +16,9 @@ struct
   val cm_name  = { get = fn () => !cm_name_ref , set = asgn cm_name_ref  }
   val str_name = { get = fn () => !str_name_ref, set = asgn str_name_ref }
 
+  val use_source_ref : bool ref = ref true
+  val use_source = { get = fn () => !use_source_ref, set = asgn use_source_ref }
+
   val default_dir_ref : string ref = ref ".molasses"
   val default_dir = { get = fn () => !default_dir_ref
                     , set = asgn default_dir_ref }

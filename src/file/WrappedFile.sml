@@ -12,6 +12,7 @@ structure WrappedFile : sig
   val exports : wrapped -> StrExport.t list
 
   include MARKER where type marker = wrapped
+  val getSourceFile : wrapped -> FilePath.t option
 
   val name : wrapped -> FileName.t
   val toString : wrapped -> string
@@ -118,20 +119,39 @@ end = struct
       Wrapped r => f r
     | Mark (_, wf') => app f wf'
 
+  fun getSourceFile wfile =
+    case wfile of
+      Mark (src, _) => SOME (Source.fileName src)
+    | Wrapped _ => NONE
+
   val futureImports : wrapped -> InfixDict.t * Import.t list = app #future
-  val name : wrapped -> FileName.t = app #name
+  fun name wfile =
+    let
+      val name = app #name wfile
+      val orig = fn path => FileName.fromOriginal (FilePath.toUnixPath path)
+    in
+      if #get Control.use_source ()
+        andalso not(FileName.isLib name)
+      then (
+        case (#get Control.mode (), getSourceFile wfile) of
+          (Control.Sequential, SOME path) => orig path
+        | (Control.Dynamic, SOME path)    => orig path
+        | _ => name
+      )
+      else name
+    end
   val exports : wrapped -> StrExport.t list = app #exports
 
   type marker = wrapped
   val mark = Mark
-  fun createMark (src, cmfile) =
-    case cmfile of
-      Mark _ => cmfile
-    | Wrapped r => Mark (src, cmfile)
-  fun removeMark cmfile =
-    case cmfile of
-      Mark (_, cmfile') => removeMark cmfile'
-    | Wrapped _ => cmfile
+  fun createMark (src, wfile) =
+    case wfile of
+      Mark _ => wfile
+    | Wrapped r => Mark (src, wfile)
+  fun removeMark wfile =
+    case wfile of
+      Mark (_, wfile') => removeMark wfile'
+    | Wrapped _ => wfile
 
   local
     fun astToString ast =
