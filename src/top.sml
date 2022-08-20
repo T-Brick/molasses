@@ -50,21 +50,33 @@ fun run () =
 
 fun repl results =
   let
-    fun mkSource dir file_opt =
+    fun getDir outdir file =
+      let
+        (* TODO: move this to utility file (along with molasses.sml version) *)
+        val abs_outdir = OS.Path.mkAbsolute {path=outdir, relativeTo="/"}
+        val relative_outdir =
+          OS.Path.mkRelative {path=OS.Path.dir file, relativeTo=abs_outdir}
+      in
+        (outdir, relative_outdir)
+      end
+    fun mkSource dir src_file file_opt =
       case file_opt of
         NONE => ""
       | SOME file =>
-          dir ^ "/" ^ (FileName.toString o GenFile.name) file
-    fun mkSources ({cm, top}, out) =
-      (mkSource out cm) ^ " "
-      ^ (String.concatWith " " (List.map (mkSource out o SOME) top))
+          (FileName.toPath (getDir dir src_file) o GenFile.name) file
+    fun mkSources ({cm, top}, src_file, out) =
+      (mkSource out src_file cm) ^ " "
+      ^ (String.concatWith " " (List.map (mkSource out src_file o SOME) top))
     val sources =
       case outputs of
         [] =>
           ListPair.map
-            (fn (r,f) => mkSources (r, Molasses.defaultDirectory f))
+            (fn (r,f) => mkSources (r, f, Molasses.defaultDirectory f))
             (results, files)
-      | _  => ListPair.map mkSources (results, outputs)
+      | _  =>
+          ListPair.map
+            (fn ((r,f),out) => mkSources (r,f,out))
+            (ListPair.map (fn x => x) (results, files), outputs)
     val cmd = repl_cmd ^ " " ^ String.concatWith " " sources
   in
     if OS.Process.isSuccess (OS.Process.system cmd)

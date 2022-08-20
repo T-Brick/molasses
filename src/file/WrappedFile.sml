@@ -6,7 +6,7 @@ structure WrappedFile : sig
   val initFuture : future
   val blank : wrapped
   val make : future -> FilePath.t -> wrapped
-  val makeLib : string -> future -> wrapped
+  val makeLib : FilePath.t -> future -> wrapped
 
   val futureImports : wrapped -> future
   val exports : wrapped -> StrExport.t list
@@ -44,9 +44,20 @@ end = struct
         }
   in
     val blank : wrapped = makeEmpty (FileName.newSML ()) [] initFuture
-    fun makeLib name future =
+    fun makeLib path future =
       let
-        val filename = FileName.fromLibrary name
+        fun getFileName path = (
+          FileName.fromLibrary (FilePath.toUnixPath path)
+            handle LibraryMap.LibraryNotFound s =>
+              case FilePath.toFields path of
+                [] => raise Fail ""
+              | _::rest => getFileName (FilePath.fromFields rest)
+        )
+        (* this has large big-O but unsure of a clean way to do better *)
+        val filename = (
+          getFileName path handle Fail _ =>
+            raise LibraryMap.LibraryNotFound (FilePath.toUnixPath path)
+        )
        in
         makeEmpty
           filename

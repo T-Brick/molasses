@@ -18,20 +18,7 @@ end = struct
 
   structure Map = Dict(
     type t = string
-    (* trims strings to the same length before comparing
-     * this way './ahhh' == 'ahhh' which is what we want *)
-    fun compare (s1, s2) =
-      let
-        val (l1, l2) = (String.size s1, String.size s2)
-        val (ss1, ss2) =
-          case Int.compare (l1, l2) of
-            LESS => (s1, String.substring (s2, l2 - l1, l1))
-          | EQUAL => (s1, s2)
-          | GREATER => (String.substring (s1, l1 - l2, l2), s2)
-      in
-        String.compare (ss1, ss2)
-      end
-    (* val compare = String.compare *)
+    val compare = String.compare
   )
 
   (* the conversions, library path variables *)

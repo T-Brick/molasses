@@ -53,11 +53,10 @@ end = struct
         findFile ()
       end
 
-    fun writeOut dir out =
+    fun writeOut (dir, rel) out =
       let
-        val filename = FileName.toString (GenFile.name out)
-        val () = Control.print ("Writing " ^ filename ^ "...\n")
-        val file = dir ^ "/" ^ filename
+        val file = FileName.toPath (dir, rel) (GenFile.name out)
+        val () = Control.print ("Writing " ^ file ^ "...\n")
         fun write () =
           let
             val outstream = TextIO.openOut file
@@ -68,7 +67,7 @@ end = struct
           end
       in
         if exists (OS.Path.dir file) (OS.Path.file file)
-        then Control.print ("Tried writing " ^ filename ^ " which exists!\n")
+        then Control.print ("Tried writing " ^ file ^ " which exists!\n")
         else write ()
       end
 
@@ -79,7 +78,10 @@ end = struct
         (* TODO: replace with SML *)
         val _ = OS.Process.system ("rm -rf " ^ outdir)
         val _ = OS.FileSys.mkDir outdir
-        val write = fn (out, _) => writeOut outdir out
+        val abs_outdir = OS.Path.mkAbsolute {path=outdir, relativeTo="/"}
+        val relative_outdir =
+          OS.Path.mkRelative {path=OS.Path.dir file, relativeTo=abs_outdir}
+        val write = fn (out, _) => writeOut (outdir, relative_outdir) out
       in
         List.foldl write () all;
         case cm of

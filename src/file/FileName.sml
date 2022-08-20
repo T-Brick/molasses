@@ -15,6 +15,7 @@ structure FileName : sig
   val isLib : filename -> bool
 
   val toString : filename -> string
+  val toPath : string * string -> filename -> string
   val eq : filename * filename -> bool
 end = struct
   datatype filename = SML of int | CM of int | Lib of string
@@ -38,6 +39,11 @@ end = struct
    fn SML n => (#get Control.sml_name ()) ^ Int.toString n ^ ".sml"
     | CM  n => (#get Control.cm_name  ()) ^ Int.toString n ^ ".cm"
     | Lib s => s
+  fun toPath (abs, rel) f =
+    case f of
+      SML _ => OS.Path.concat (abs, toString f)
+    | CM _  => OS.Path.concat (abs, toString f)
+    | Lib _ => OS.Path.concat (rel, toString f)
   val eq =
    fn (SML n, SML m) => n = m
     | (CM n , CM m ) => n = m

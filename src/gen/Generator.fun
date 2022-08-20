@@ -15,7 +15,6 @@ struct
   fun loadFile (dir, pathmap) token acc path load =
     let
       val file = (FilePath.normalize o FilePath.join) (dir, path)
-      val unixpath = FilePath.toUnixPath path
       val (result, used, _) = GeneratorUtil.getFile pathmap file
       val isLibPathVar = LibraryMap.isLibraryPathVar (#get Control.libmap ())
     in
@@ -29,7 +28,7 @@ struct
           if List.exists isLibPathVar used then
             foundLibrary acc
               ( WFile.createMark ( MLBToken.getSource token
-                                 , WFile.makeLib unixpath (getFuture acc) ) )
+                                 , WFile.makeLib path (getFuture acc) ) )
           else
             createMark
               ( MLBToken.getSource token
