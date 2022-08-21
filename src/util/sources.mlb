@@ -1,5 +1,8 @@
 ../../parse-sml/src/base/sources.mlb
+../../parse-sml/src/parse/sources.mlb
+../../parse-sml/src/pretty-print/sources.mlb
 ../control/sources.mlb
 
+SafeParser.sml
 Marker.sig
 InternalStruct.sml

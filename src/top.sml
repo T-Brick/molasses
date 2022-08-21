@@ -9,7 +9,7 @@ val help_msg =
 \                        '.molasses' where the source is located.\n\
 \  [-v]                  Verbose output.\n\
 \  [--repl]              Loads the files into a REPL after generating them.\n\
-\  [--repl-cmd C]        When loading the files into the REPL, use command C\n\
+\  [-repl-cmd C]         When loading the files into the REPL, use command C\n\
 \                        instead of the default 'rlwrap sml'\n\
 \                        (does nothing without --repl flag)\n\
 \  [--help]              Prints this message.\n"
@@ -48,6 +48,14 @@ fun run () =
         OS.Process.exit OS.Process.failure
       )
 
+fun make_repl_cmd files =
+  repl_cmd ^ " " ^ String.concatWith " " files
+
+fun boot_repl files =
+  if (OS.Process.isSuccess o OS.Process.system o make_repl_cmd) files
+  then OS.Process.exit OS.Process.success
+  else OS.Process.exit OS.Process.failure
+
 fun repl results =
   let
     fun getDir outdir file =
@@ -77,12 +85,14 @@ fun repl results =
           ListPair.map
             (fn ((r,f),out) => mkSources (r,f,out))
             (ListPair.map (fn x => x) (results, files), outputs)
-    val cmd = repl_cmd ^ " " ^ String.concatWith " " sources
   in
-    if OS.Process.isSuccess (OS.Process.system cmd)
-    then OS.Process.exit OS.Process.success
-    else OS.Process.exit OS.Process.failure
+    boot_repl sources
   end
 
-val results = if doHelp then help () else run ()
+val results = if doHelp then help () else (
+  run () handle exn as Molasses.UnknownFile s =>
+    if doREPL
+    then (Control.print "Failed to load... booting to REPL.\n"; boot_repl files)
+    else raise exn
+)
 val _ = if doREPL then repl results else ()

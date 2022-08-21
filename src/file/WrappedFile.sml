@@ -68,26 +68,10 @@ end = struct
 
   end
 
-  fun handleLexOrParseError exn =
-    let
-      val e =
-        case exn of
-          Error.Error e => e
-        | other => raise other
-      val hist = MLton.Exn.history exn
-    in
-      TerminalColorString.print
-        (Error.show {highlighter = SOME SyntaxHighlighter.fuzzyHighlight} e);
-      if List.null hist then () else
-        print ("\n" ^ String.concat (List.map (fn ln => ln ^ "\n") hist));
-      OS.Process.exit OS.Process.failure
-    end
-
   fun make (fixities, imports) file =
     let
       val source = Source.loadFromFile file
-      val (fixities, ast) = Parser.parseWithInfdict fixities source
-        handle exn => handleLexOrParseError exn
+      val (fixities, ast) = SafeParser.parseWithInfdict fixities source
       val (exp_exports, future, str_exports) = FindTopDecs.find ast
       val future = future @ imports
       val (future, istr, istr_export) =

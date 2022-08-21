@@ -117,6 +117,10 @@ end = struct
     fun checkFile file =
       case OS.Path.ext file of
         SOME "mlb" => file
+      | SOME "sml" =>
+        ( (SafeParser.parse o Source.loadFromFile o FilePath.fromUnixPath) file
+        ; raise UnknownFile file
+        )
       | _ => raise UnknownFile file
   in
     fun makeTo pathmap = maker pathmap o checkFile
