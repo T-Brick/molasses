@@ -47,10 +47,7 @@ end = struct
   fun addMappings (conversions, pathvars) ms =
     case ms of
       [] => (conversions, pathvars)
-    | m::ms' => (
-      print ("Adding libmap: " ^ (#1 m) ^ " ---> " ^ (#2 m) ^ "\n");
-      addMappings (Map.insert conversions m, pathvars) ms'
-    )
+    | m::ms' => addMappings (Map.insert conversions m, pathvars) ms'
 
   fun addPathVars (conversions, pathvars) pvs = (conversions, pvs @ pathvars)
 
