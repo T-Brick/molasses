@@ -17,6 +17,11 @@ struct
       val file = (FilePath.normalize o FilePath.join) (dir, path)
       val (result, used, _) = GeneratorUtil.getFile pathmap file
       val isLibPathVar = LibraryMap.isLibraryPathVar (#get Control.libmap ())
+      fun nonLib () =
+        createMark
+          ( MLBToken.getSource token
+          , load (dir, pathmap) acc create result
+          )
     in
       (* a src file is only loaded once, so we can just output it directly *)
       case Generated.findPath (getGened acc) result of
@@ -26,13 +31,13 @@ struct
       | SOME (GenFile.TopLevel _) => raise IllegalState
       | NONE => (
           if List.exists isLibPathVar used then
-            foundLibrary acc
-              ( WFile.createMark ( MLBToken.getSource token
-                                 , WFile.makeLib path (getFuture acc) ) )
+            case WFile.makeLib path (getFuture acc) of
+              SOME lib =>
+                foundLibrary acc
+                  ( WFile.createMark (MLBToken.getSource token, lib) )
+            | NONE => nonLib ()
           else
-            createMark
-              ( MLBToken.getSource token
-              , load (dir, pathmap) acc create result )
+            nonLib ()
       )
     end
   and create (dir, pathmap) cfile acc basdec =

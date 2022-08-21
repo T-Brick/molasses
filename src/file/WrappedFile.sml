@@ -6,7 +6,7 @@ structure WrappedFile : sig
   val initFuture : future
   val blank : wrapped
   val make : future -> FilePath.t -> wrapped
-  val makeLib : FilePath.t -> future -> wrapped
+  val makeLib : FilePath.t -> future -> wrapped option
 
   val futureImports : wrapped -> future
   val exports : wrapped -> StrExport.t list
@@ -48,22 +48,22 @@ end = struct
     fun makeLib path future =
       let
         fun getFileName path = (
-          FileName.fromLibrary (FilePath.toUnixPath path)
+          SOME (FileName.fromLibrary (FilePath.toUnixPath path))
             handle LibraryMap.LibraryNotFound s =>
               case FilePath.toFields path of
-                [] => raise Fail ""
+                [] => NONE
+              | _::[] => NONE
               | _::rest => getFileName (FilePath.fromFields rest)
         )
         (* this has large big-O but unsure of a clean way to do better *)
-        val filename = (
-          getFileName path handle Fail _ =>
-            raise LibraryMap.LibraryNotFound (FilePath.toUnixPath path)
-        )
-       in
-        makeEmpty
-          filename
-          [ StrExport.Lib (FileName.toString filename) ]
-          future
+        val filename_opt = getFileName path
+        in
+          Option.map (fn filename =>
+            makeEmpty
+              filename
+              [ StrExport.Lib (FileName.toString filename) ]
+              future
+          ) filename_opt
       end
 
   end
