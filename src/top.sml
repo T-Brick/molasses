@@ -35,9 +35,16 @@ fun help () = (
   OS.Process.exit OS.Process.success
 )
 
+fun make_repl_cmd files = repl_cmd ^ " " ^ String.concatWith " " files
+
+fun boot_repl files =
+  if (OS.Process.isSuccess o OS.Process.system o make_repl_cmd) files
+  then OS.Process.exit OS.Process.success
+  else OS.Process.exit OS.Process.failure
+
 fun run () =
   case (files, outputs) of
-    ([], _) => help ()
+    ([], _) => if doREPL then boot_repl [] else help ()
   | (_, []) => List.map (Molasses.make pathmap) files
   | (_, _) =>
       ListPair.mapEq
@@ -47,14 +54,6 @@ fun run () =
         print "Each file must have their own output";
         OS.Process.exit OS.Process.failure
       )
-
-fun make_repl_cmd files =
-  repl_cmd ^ " " ^ String.concatWith " " files
-
-fun boot_repl files =
-  if (OS.Process.isSuccess o OS.Process.system o make_repl_cmd) files
-  then OS.Process.exit OS.Process.success
-  else OS.Process.exit OS.Process.failure
 
 fun repl results =
   let
@@ -71,7 +70,7 @@ fun repl results =
       case file_opt of
         NONE => ""
       | SOME file =>
-          (FileName.toPath (getDir dir src_file) o GenFile.name) file
+          "'" ^ (FileName.toPath (getDir dir src_file) o GenFile.name) file ^ "'"
     fun mkSources ({cm, top}, src_file, out) =
       (mkSource out src_file cm) ^ " "
       ^ (String.concatWith " " (List.map (mkSource out src_file o SOME) top))
