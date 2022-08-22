@@ -18,6 +18,9 @@ struct
 
   val use_source_ref : bool ref = ref true
   val use_source = { get = fn () => !use_source_ref, set = asgn use_source_ref }
+  val recover_src_ref : bool ref = ref false
+  val recover_src = { get = fn () => !recover_src_ref
+                    , set = asgn recover_src_ref }
 
   val default_dir_ref : string ref = ref ".molasses"
   val default_dir = { get = fn () => !default_dir_ref

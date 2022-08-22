@@ -118,12 +118,25 @@ end = struct
       case OS.Path.ext file of
         SOME "mlb" => file
       | SOME "sml" =>
-        ( (SafeParser.parse o Source.loadFromFile o FilePath.fromUnixPath) file
+        ( if #get Control.recover_src () then
+            ( ignore
+            o SafeParser.parse
+            o Source.loadFromFile
+            o FilePath.fromUnixPath) file
+          else ()
         ; raise UnknownFile file
         )
       | _ => raise UnknownFile file
   in
-    fun makeTo pathmap = maker pathmap o checkFile
+    fun makeTo pathmap outdir file = (maker pathmap o checkFile) outdir file
+      handle UnknownFile file =>
+        if #get Control.recover_src () then
+          ( Control.print "Failed to load... booting to REPL.\n"
+          ; { cm = NONE
+            , top = [GenFile.TopLevel(FileName.fromOriginal file, [])]
+            }
+          )
+        else raise UnknownFile file
     fun make pathmap file = makeTo pathmap file (defaultDirectory file)
 
     fun makeTo' file = makeTo (MLtonPathMap.getPathMap ()) file

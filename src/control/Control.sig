@@ -11,6 +11,7 @@ sig
   val str_name : string controller
 
   val use_source : bool controller
+  val recover_src : bool controller
 
   val default_dir : string controller
 

@@ -22,6 +22,7 @@ val repl_cmd = CommandLineArgs.parseString "repl-cmd" "rlwrap sml"
 val doREPL = CommandLineArgs.parseFlag "repl"
 val doHelp = CommandLineArgs.parseFlag "help"
 val () = #set Control.verbose (CommandLineArgs.parseSingleFlag "v")
+val () = #set Control.recover_src doREPL
 
 val files = CommandLineArgs.positional ()
 
