@@ -1,0 +1,10 @@
+(* parse-sml/src/base/lib/compat/nj.mlb : 7.5-7.17 *)
+Library
+	library($/basis.cm)
+	library($/basis.cm (* mlton *))
+	structure MLton	(* parse-sml/src/base/lib/compat/nj-mlton.sml : 43.11-43.16 *)
+	structure MLtonProcess	(* parse-sml/src/base/lib/compat/nj-mlton.sml : 15.11-15.23 *)
+is
+	molasses-sources10.cm
+	$/basis.cm
+	molasses-file0.sml

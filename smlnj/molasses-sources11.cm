@@ -1,0 +1,20 @@
+(* parse-sml/src/base/lib/compat/nj.mlb : 1.1-1.6 *)
+Library
+	structure Word8ArrayExtra	(* parse-sml/src/base/lib/compat/nj.mlb : 10.5-10.14 *)
+	structure ArrayExtra	(* parse-sml/src/base/lib/compat/nj.mlb : 9.5-9.14 *)
+	library($/basis.cm)
+	library($/basis.cm (* mlton *))
+	structure MLton	(* parse-sml/src/base/lib/compat/nj-mlton.sml : 43.11-43.16 *)
+	structure MLtonProcess	(* parse-sml/src/base/lib/compat/nj-mlton.sml : 15.11-15.23 *)
+	structure PosixReadFile	(* parse-sml/src/base/lib/compat/PosixReadFile.sml : 6.11-6.24 *)
+	structure GCStats	(* parse-sml/src/base/lib/compat/nj.sml : 42.11-42.18 *)
+	structure ReadFile	(* parse-sml/src/base/lib/compat/nj.sml : 40.11-40.19 *)
+	structure Concurrency	(* parse-sml/src/base/lib/compat/nj.sml : 19.11-19.22 *)
+	structure ForkJoin	(* parse-sml/src/base/lib/compat/nj.sml : 6.11-6.19 *)
+	structure Word16	(* parse-sml/src/base/lib/compat/nj-word16.sml : 2.11-2.17 *)
+is
+	molasses-sources12.cm
+	molasses-sources13.cm
+	molasses-file3.sml
+	molasses-file4.sml
+	molasses-file5.sml

@@ -4,8 +4,8 @@ support ML Basis (MLB) files.
 
 ## Usage
 
-You can build `molasses` using `make`, then passing in a MLB file to the
-executable:
+If you have MLton installed, you can build `molasses` using `make molasses`,
+then passing in a MLB file to the executable:
 
 ```sh
 make
@@ -16,6 +16,16 @@ to load the `molasses-sources1.cm` file will load all the files into SML/NJ. To
 use the REPL, you can also pass in the `--repl` flag, which will generate the
 appropriate files and launch the SML/NJ REPL (using the command `rlwrap sml`),
 with the appropriate toplevel declarations already loaded.
+
+If you only have SML/NJ installed, you can load `molasses` by typing:
+
+```sh
+sml smlnj/molasses-sources1.cm
+```
+
+This should open the SML/NJ REPL with molasses loaded in. You can then use the
+`Molasses` structure to generate molasses files. There is also the `MolassesNJ`
+structure for generating heap images.
 
 ## Mapping Specific MLB Files
 

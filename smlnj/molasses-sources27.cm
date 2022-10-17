@@ -1,0 +1,5 @@
+(* parse-sml/src/parse/sources.mlb : 20.1-20.4 *)
+Library
+	structure Parser	(* parse-sml/src/parse/sources.mlb : 19.3-19.12 *)
+is
+	molasses-sources29.cm

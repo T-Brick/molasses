@@ -1,0 +1,21 @@
+(* parse-sml/src/base/lib/sources.mlb : 12.3-12.20 *)
+Library
+	structure MLton	(* parse-sml/src/base/lib/compat/nj.mlb : 22.3-22.12 *)
+	structure Word16	(* parse-sml/src/base/lib/compat/nj.mlb : 21.3-21.12 *)
+	structure GCStats	(* parse-sml/src/base/lib/compat/nj.mlb : 20.3-20.12 *)
+	structure ReadFile	(* parse-sml/src/base/lib/compat/nj.mlb : 19.3-19.12 *)
+	structure Concurrency	(* parse-sml/src/base/lib/compat/nj.mlb : 18.3-18.12 *)
+	structure ForkJoin	(* parse-sml/src/base/lib/compat/nj.mlb : 17.3-17.12 *)
+	library($/basis.cm)
+	library($/basis.cm (* mlton *))
+	structure CommandLineArgs	(* parse-sml/src/base/lib/CommandLineArgs.sml : 6.11-6.26 *)
+	structure Util	(* parse-sml/src/base/lib/Util.sml : 6.11-6.15 *)
+	structure SeqBasis	(* parse-sml/src/base/lib/SeqBasis.sml : 6.11-6.19 *)
+	signature SEQUENCE	(* parse-sml/src/base/lib/SEQUENCE.sml : 6.11-6.19 *)
+is
+	molasses-sources9.cm
+	molasses-sources10.cm
+	molasses-file6.sml
+	molasses-file7.sml
+	molasses-file8.sml
+	molasses-file9.sml

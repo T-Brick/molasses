@@ -1,0 +1,8 @@
+(* parse-sml/src/base/lib/sources.mlb : 13.1-13.3 *)
+Library
+	structure ArraySequence	(* parse-sml/src/base/lib/sources.mlb : 15.3-15.12 *)
+	structure Seq	(* parse-sml/src/base/lib/sources.mlb : 14.3-14.12 *)
+is
+	molasses-sources18.cm
+	molasses-file10.sml
+	molasses-file11.sml

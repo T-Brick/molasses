@@ -1,0 +1,6 @@
+(* parse-sml/src/base/lib/compat/nj.mlb : 11.3-11.6 *)
+Library
+	structure Word8ArrayExtra	(* parse-sml/src/base/lib/compat/nj.mlb : 10.5-10.14 *)
+	structure ArrayExtra	(* parse-sml/src/base/lib/compat/nj.mlb : 9.5-9.14 *)
+is
+	molasses-sources15.cm

@@ -1,0 +1,13 @@
+(* parse-sml/src/base/lib/compat/nj.mlb : 5.3-5.8 *)
+Library
+	library($/basis.cm)
+	library($/basis.cm (* mlton *))
+	structure MLton	(* parse-sml/src/base/lib/compat/nj-mlton.sml : 43.11-43.16 *)
+	structure MLtonProcess	(* parse-sml/src/base/lib/compat/nj-mlton.sml : 15.11-15.23 *)
+	library($/basis.cm (* build *))
+	structure Word8Array	(* parse-sml/src/base/lib/compat/nj-array.sml : 8.11-8.21 *)
+	structure Array	(* parse-sml/src/base/lib/compat/nj-array.sml : 1.11-1.16 *)
+is
+	molasses-sources13.cm
+	$/basis.cm (* build *)
+	molasses-file1.sml

@@ -1,0 +1,5 @@
+(* parse-sml/src/base/sources.mlb : 22.1-22.4 *)
+Library
+	functor Dict	(* parse-sml/src/base/sources.mlb : 21.3-21.10 *)
+is
+	molasses-sources22.cm

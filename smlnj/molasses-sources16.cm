@@ -1,0 +1,10 @@
+(* parse-sml/src/base/lib/compat/nj.mlb : 16.1-16.3 *)
+Library
+	structure MLton	(* parse-sml/src/base/lib/compat/nj.mlb : 22.3-22.12 *)
+	structure Word16	(* parse-sml/src/base/lib/compat/nj.mlb : 21.3-21.12 *)
+	structure GCStats	(* parse-sml/src/base/lib/compat/nj.mlb : 20.3-20.12 *)
+	structure ReadFile	(* parse-sml/src/base/lib/compat/nj.mlb : 19.3-19.12 *)
+	structure Concurrency	(* parse-sml/src/base/lib/compat/nj.mlb : 18.3-18.12 *)
+	structure ForkJoin	(* parse-sml/src/base/lib/compat/nj.mlb : 17.3-17.12 *)
+is
+	molasses-sources11.cm

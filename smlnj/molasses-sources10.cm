@@ -1,0 +1,7 @@
+(* parse-sml/src/base/lib/compat/nj.mlb : 4.3-4.15 *)
+Library
+	library($/basis.cm)
+	library($/basis.cm (* mlton *))
+is
+	$/basis.cm
+	$/basis.cm (* mlton *)

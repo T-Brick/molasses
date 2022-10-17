@@ -1,0 +1,7 @@
+(* parse-sml/src/ast/sources.mlb : 10.1-10.4 *)
+Library
+	structure Ast	(* parse-sml/src/ast/sources.mlb : 9.3-9.12 *)
+	structure MaybeLongToken	(* parse-sml/src/ast/sources.mlb : 8.3-8.12 *)
+	structure Token	(* parse-sml/src/ast/sources.mlb : 7.3-7.12 *)
+is
+	molasses-sources26.cm
