@@ -28,7 +28,13 @@ struct
       o TokenDoc.toStringDoc {tabWidth = 0}
       o show
 
-    fun mkType ty =
+    fun mkType
+        (ty : { tyvars: Token.t Ast.SyntaxSeq.t
+              , tycon: Token.t
+              , eq: Token.t
+              , ty: Ast.Ty.t
+              }
+        ) =
       let
         val pp = (
           case PrettyUtil.maybeShowSyntaxSeq (#tyvars ty) (TokenDoc.token) of
