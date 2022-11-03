@@ -1,9 +1,9 @@
 SOURCES =$(shell find src -iname "*.sml" -o -iname "*.mlb")
 
-all: molasses smlnj
-
 molasses: $(SOURCES)
 	mlton -mlb-path-var 'COMPAT mlton' -output molasses src/molasses.mlb
+
+all: molasses smlnj
 
 smlnj:
 	./molasses -mlb-path-var 'COMPAT nj' -output smlnj src/molasses.mlb

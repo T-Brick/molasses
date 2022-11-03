@@ -7,13 +7,19 @@ struct
     -> MLBAst.basdec
     -> 'acc
 
-  fun getFile pathmap file =
+  fun getFile pathmap relativeDir file =
     let
       val {result, used} = MLtonPathMap.expandPath pathmap file
       val unixpath = FilePath.toUnixPath file
-      val () = Control.print ("Loading file " ^ unixpath ^ "\n")
+      val () = Control.print (
+        "Loading file " ^ unixpath ^ " as " ^ FilePath.toUnixPath result ^ "\n"
+      )
+      val result =
+        if FilePath.isAbsolute result
+        then result
+        else FilePath.normalize (FilePath.join (relativeDir, result))
     in
-      (result, used, unixpath)
+      (result, used)
     end
 
   fun getAst file =

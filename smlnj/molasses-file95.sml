@@ -1,4 +1,4 @@
-(* src/gen/util/GeneratorUtil.sig : 1.1-15.1 *)
+(* src/gen/util/GeneratorUtil.sig : 1.1-16.1 *)
 (* molasses-file95.sml *)
 signature GENERATOR_UTIL =
   sig
@@ -10,7 +10,8 @@ signature GENERATOR_UTIL =
 
     val getFile : MLtonPathMap.t
                     -> FilePath.t
-                    -> FilePath.t * string list * string
+                    -> FilePath.t
+                    -> FilePath.t * string list
     val getAst : FilePath.t -> FilePath.t * MLBAst.t
   end
 

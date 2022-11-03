@@ -16,8 +16,7 @@ functor MkGenerator (Gen : INTERNAL_GENERATOR) :> GENERATOR =
 
     fun loadFile (dir, pathmap) token acc path load =
       let
-        val file = (FilePath.normalize o FilePath.join) (dir, path)
-        val (result, used, _) = GeneratorUtil.getFile pathmap file
+        val (result, used) = GeneratorUtil.getFile pathmap dir path
         val isLibPathVar = LibraryMap.isLibraryPathVar (# get Control.libmap ())
         fun nonLib () =
           createMark
@@ -80,7 +79,8 @@ functor MkGenerator (Gen : INTERNAL_GENERATOR) :> GENERATOR =
         val _ = FileName.resetSML ()
         val top_cm = FileName.resetCM ()
 
-        val (result, used, unixpath) = GeneratorUtil.getFile pathmap file
+        val (result, _) =
+          GeneratorUtil.getFile pathmap (FilePath.fromFields ["."]) file
         val (dir, Ast basdec) = GeneratorUtil.getAst result
         val res = create (dir, pathmap) (SOME file) emptyAcc basdec
 

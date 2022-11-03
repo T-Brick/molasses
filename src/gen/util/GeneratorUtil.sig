@@ -9,6 +9,7 @@ sig
 
   val getFile : MLtonPathMap.t
              -> FilePath.t
-             -> FilePath.t * string list * string
+             -> FilePath.t
+             -> FilePath.t * string list
   val getAst : FilePath.t -> FilePath.t * MLBAst.t
 end
