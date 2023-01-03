@@ -17,15 +17,23 @@ use the REPL, you can also pass in the `--repl` flag, which will generate the
 appropriate files and launch the SML/NJ REPL (using the command `rlwrap sml`),
 with the appropriate toplevel declarations already loaded.
 
-If you only have SML/NJ installed, you can load `molasses` by typing:
+If you only have SML/NJ installed, you can load `molasses` by running:
+```sh
+make repl
+```
+
+This will load an SML/NJ REPL with all of Molasses already loaded. Running this
+will also generate a heap image `molasses-repl.arch-opsys`. You can then use
+this heap image to load the SML/NJ REPL with Molasses anywhere by running:
 
 ```sh
-sml smlnj/molasses-sources1.cm
+sml @SMLload=molasses-repl
 ```
 
 This should open the SML/NJ REPL with molasses loaded in. You can then use the
-`Molasses` structure to generate molasses files. There is also the `MolassesNJ`
-structure for generating heap images.
+`Molasses` structure to generate molasses files. The `MolassesNJ` structure may
+be used for generating heap images. Also, the implementation defined
+`use : string -> unit` has been defined to use Molasses.
 
 ## Mapping Specific MLB Files
 
