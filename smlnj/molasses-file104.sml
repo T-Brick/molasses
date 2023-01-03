@@ -1,7 +1,9 @@
-(* src/molasses.sml : 1.1-169.1 *)
+(* src/molasses.sml : 1.1-176.1 *)
 (* molasses-file104.sml *)
 structure Molasses :
   sig
+
+    val version : {id : int list, system : string}
 
     structure Control : CONTROL
 
@@ -21,6 +23,9 @@ structure Molasses :
     val loadLibraryMap : string -> unit
   end =
   struct
+
+    val version : {id : int list, system : string} =
+      {id = [0, 1, 2], system = "Molasses"}
 
     structure Control = Control
 

@@ -1,5 +1,7 @@
 structure Molasses : sig
 
+  val version : { id : int list, system : string }
+
   structure Control : CONTROL
 
   exception UnknownFile of string
@@ -20,6 +22,11 @@ structure Molasses : sig
 
   val loadLibraryMap : string -> unit
 end = struct
+
+  val version : { id : int list, system : string } =
+    { id = [0, 1, 2]
+    , system = "Molasses"
+    }
 
   structure Control = Control
 
