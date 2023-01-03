@@ -1,5 +1,7 @@
 structure SafeParser =
 struct
+  exception ParseError of { content : Error.element list, header : string }
+
   local
     fun handleLexOrParseError exn =
       let
@@ -11,9 +13,13 @@ struct
       in
         TerminalColorString.print
           (Error.show {highlighter = SOME SyntaxHighlighter.fuzzyHighlight} e);
+
         if List.null hist then () else
           print ("\n" ^ String.concat (List.map (fn ln => ln ^ "\n") hist));
-        OS.Process.exit OS.Process.failure
+
+        if #get Control.kill_on_parse_err ()
+        then OS.Process.exit OS.Process.failure
+        else raise ParseError e
       end
   in
     fun parse source =

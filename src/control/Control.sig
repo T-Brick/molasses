@@ -12,6 +12,7 @@ sig
 
   val use_source : bool controller
   val recover_src : bool controller
+  val kill_on_parse_err : bool controller
 
   val default_dir : string controller
 

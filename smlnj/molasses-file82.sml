@@ -1,4 +1,4 @@
-(* src/control/Control.sml : 1.1-36.1 *)
+(* src/control/Control.sml : 1.1-39.1 *)
 (* molasses-file82.sml *)
 structure Control :> CONTROL =
   struct
@@ -24,6 +24,9 @@ structure Control :> CONTROL =
     val recover_src_ref : bool ref = ref false
     val recover_src =
       {get = fn () => ! recover_src_ref, set = asgn recover_src_ref}
+    val kill_on_parse_err_ref : bool ref = ref true
+    val kill_on_parse_err =
+      {get = fn () => ! kill_on_parse_err_ref, set = asgn kill_on_parse_err_ref}
 
     val default_dir_ref : string ref = ref ".molasses"
     val default_dir =

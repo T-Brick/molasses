@@ -1,4 +1,4 @@
-(* src/control/Control.sig : 1.1-23.1 *)
+(* src/control/Control.sig : 1.1-24.1 *)
 (* molasses-file81.sml *)
 signature CONTROL =
   sig
@@ -14,6 +14,7 @@ signature CONTROL =
 
     val use_source : bool controller
     val recover_src : bool controller
+    val kill_on_parse_err : bool controller
 
     val default_dir : string controller
 

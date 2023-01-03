@@ -11,21 +11,22 @@ structure MolassesNJ =
 
     val use =
       fn file =>
-        let
-          val out = Molasses.defaultDirectory file
-          val {cm, top} = Molasses.make' file
-          val _ =
-            (* load CM files *)
-            case FileUtils.getSource out file cm of
-              NONE => ()
-            | SOME f => use f
-          val _ =
-            List.map
-              (fn f => Option.map use (FileUtils.getSource out file (SOME f)))
-              top
-        in
-          ()
-        end
+        (let
+           val out = Molasses.defaultDirectory file
+           val {cm, top} = Molasses.make' file
+           val _ =
+             (* load CM files *)
+             case FileUtils.getSource out file cm of
+               NONE => ()
+             | SOME f => use f
+           val _ =
+             List.map
+               (fn f => Option.map use (FileUtils.getSource out file (SOME f)))
+               top
+         in
+           ()
+         end
+           handle SafeParser.ParseError _ => ())
   end
 
 end

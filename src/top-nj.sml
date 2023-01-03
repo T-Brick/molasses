@@ -12,7 +12,7 @@ struct
     SMLofNJ.exportFn ("molasses", main)
 
   val use = fn file =>
-    let
+    (let
       val out = Molasses.defaultDirectory file
       val {cm, top} = Molasses.make' file
       val _ = (* load CM files *)
@@ -24,5 +24,5 @@ struct
       ) top
     in
       ()
-    end
+    end handle SafeParser.ParseError _ => ())
 end
