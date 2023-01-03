@@ -1,8 +1,6 @@
 
 structure MolassesNJ =
 struct
-  val () = #set Control.mode Control.Full
-
   fun main (name, args) =
     let
       val () = top_level ()
@@ -12,4 +10,19 @@ struct
 
   fun export () =
     SMLofNJ.exportFn ("molasses", main)
+
+  val use = fn file =>
+    let
+      val out = Molasses.defaultDirectory file
+      val {cm, top} = Molasses.make' file
+      val _ = (* load CM files *)
+        case FileUtils.getSource out file cm of
+          NONE => ()
+        | SOME f => use f
+      val _ = List.map (fn f =>
+        Option.map use (FileUtils.getSource out file (SOME f))
+      ) top
+    in
+      ()
+    end
 end

@@ -87,9 +87,11 @@ Library
 	structure WrappedFile	(* src/file/WrappedFile.sml : 1.11-1.22 *)
 	structure CMFile	(* src/file/CMFile.sml : 1.11-1.17 *)
 	structure GenFile	(* src/file/GenFile.sml : 1.11-1.18 *)
+	structure FileUtils	(* src/file/FileUtils.sml : 1.11-1.20 *)
 is
 	molasses-sources35.cm
 	molasses-file90.sml
 	molasses-file91.sml
 	molasses-file92.sml
 	molasses-file93.sml
+	molasses-file94.sml

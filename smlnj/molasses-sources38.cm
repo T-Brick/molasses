@@ -87,6 +87,7 @@ Library
 	structure WrappedFile	(* src/file/WrappedFile.sml : 1.11-1.22 *)
 	structure CMFile	(* src/file/CMFile.sml : 1.11-1.17 *)
 	structure GenFile	(* src/file/GenFile.sml : 1.11-1.18 *)
+	structure FileUtils	(* src/file/FileUtils.sml : 1.11-1.20 *)
 	structure Generated	(* src/gen/Generated.sml : 1.11-1.20 *)
 	signature GENERATOR_UTIL	(* src/gen/util/GeneratorUtil.sig : 1.11-1.25 *)
 	structure GeneratorUtil	(* src/gen/util/GeneratorUtil.sml : 1.11-1.24 *)
@@ -98,7 +99,6 @@ Library
 	structure GenDriver	(* src/gen/GenDriver.sml : 1.11-1.20 *)
 is
 	molasses-sources37.cm
-	molasses-file95.sml
 	molasses-file96.sml
 	molasses-file97.sml
 	molasses-file98.sml
@@ -106,3 +106,4 @@ is
 	molasses-file100.sml
 	molasses-file101.sml
 	molasses-file102.sml
+	molasses-file103.sml

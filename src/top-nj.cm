@@ -1,0 +1,5 @@
+Library
+  structure Molasses
+  structure MolassesNJ
+is
+  ../smlnj/molasses-sources1.cm

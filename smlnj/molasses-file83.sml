@@ -1,8 +1,7 @@
-(* src/util/SafeParser.sml : 1.1-29.1 *)
+(* src/util/SafeParser.sml : 1.1-28.1 *)
 (* molasses-file83.sml *)
 structure SafeParser =
   struct
-
     local
       fun handleLexOrParseError exn =
         let

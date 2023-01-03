@@ -1,4 +1,3 @@
-
 fun top_level () =
   let
     val help_msg =
@@ -16,10 +15,10 @@ fun top_level () =
     \                        (does nothing without --repl flag)\n\
     \  [--help]              Prints this message.\n"
 
-    val mlbPathVars = CommandLineArgs.parseStrings "mlb-path-var"
-    val libmap_files = CommandLineArgs.parseStrings "libmap"
-    val outputs = CommandLineArgs.parseStrings "output"
-    val repl_cmd = CommandLineArgs.parseString "repl-cmd" "rlwrap sml"
+    val mlbPathVars   = CommandLineArgs.parseStrings "mlb-path-var"
+    val libmap_files  = CommandLineArgs.parseStrings "libmap"
+    val outputs       = CommandLineArgs.parseStrings "output"
+    val repl_cmd      = CommandLineArgs.parseString "repl-cmd" "rlwrap sml"
 
     val doREPL = CommandLineArgs.parseFlag "repl"
     val doHelp = CommandLineArgs.parseFlag "help"
@@ -32,12 +31,12 @@ fun top_level () =
     val pathmap = MLtonPathMap.getPathMap ()
     val pathmap =
       List.concat (List.map MLtonPathMap.fromString mlbPathVars) @ pathmap
-    val () = List.app (Molasses.loadLibraryMap) libmap_files
+    val () = List.app Molasses.loadLibraryMap libmap_files
 
-    fun help () = (
-      print help_msg;
-      OS.Process.exit OS.Process.success
-    )
+    fun help () =
+      ( print help_msg
+      ; OS.Process.exit OS.Process.success
+      )
 
     fun make_repl_cmd files = repl_cmd ^ " " ^ String.concatWith " " files
 
@@ -55,49 +54,39 @@ fun top_level () =
             (fn (file, out) => Molasses.makeTo pathmap file out)
             (files, outputs)
           handle ListPair.UnequalLengths => (
-            print "Each file must have their own output";
+            print "Each file must have their own output\n";
             OS.Process.exit OS.Process.failure
           )
 
-    fun repl results =
+    fun getFiles outputs files results =
       let
-        fun getDir outdir file =
-          let
-            (* TODO: move this to utility file (along with molasses.sml version) *)
-            val abs_outdir = OS.Path.mkAbsolute {path=outdir, relativeTo="/"}
-            val relative_outdir =
-              OS.Path.mkRelative {path=OS.Path.dir file, relativeTo=abs_outdir}
-          in
-            (outdir, relative_outdir)
-          end
         fun mkSource dir src_file file_opt =
-          case file_opt of
+          case FileUtils.getSource dir src_file file_opt of
             NONE => ""
-          | SOME file =>
-              "'" ^ (FileName.toPath (getDir dir src_file) o GenFile.name) file ^ "'"
+          | SOME file => "'" ^ file ^ "'"
         fun mkSources ({cm, top}, src_file, out) =
           (mkSource out src_file cm) ^ " "
           ^ (String.concatWith " " (List.map (mkSource out src_file o SOME) top))
-        val sources =
-          case outputs of
-            [] =>
-              ListPair.map
-                (fn (r,f) => mkSources (r, f, Molasses.defaultDirectory f))
-                (results, files)
-          | _  =>
-              ListPair.map
-                (fn ((r,f),out) => mkSources (r,f,out))
-                (ListPair.map (fn x => x) (results, files), outputs)
       in
-        boot_repl sources
+        case outputs of
+          [] =>
+            ListPair.map
+              (fn (r,f) => mkSources (r, f, Molasses.defaultDirectory f))
+              (results, files)
+        | _  =>
+            ListPair.map
+              (fn ((r,f),out) => mkSources (r,f,out))
+              (ListPair.map (fn x => x) (results, files), outputs)
       end
+
+    val repl = ignore o boot_repl o (getFiles outputs files)
 
     val results = if doHelp then help () else (
       run () handle exn as Molasses.UnknownFile s =>
         if doREPL
         then (Control.print "Failed to load... booting to REPL.\n"; boot_repl files)
         else raise exn
-    )
+      )
     val _ = if doREPL then repl results else ()
   in
     ()

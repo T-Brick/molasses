@@ -1,6 +1,5 @@
 structure SafeParser =
 struct
-
   local
     fun handleLexOrParseError exn =
       let

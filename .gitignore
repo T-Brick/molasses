@@ -5,3 +5,4 @@
 # molasses-sources*.sml
 molasses
 molasses.*
+molasses-repl.*

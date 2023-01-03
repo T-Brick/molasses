@@ -3,6 +3,7 @@ structure Molasses : sig
   structure Control : CONTROL
 
   exception UnknownFile of string
+  exception UnknownFileExtension of string
   type outdir = string
   val defaultDirectory : string -> outdir
 
@@ -18,12 +19,12 @@ structure Molasses : sig
   val make' : string -> result
 
   val loadLibraryMap : string -> unit
-
 end = struct
 
   structure Control = Control
 
   exception UnknownFile of string
+  exception UnknownFileExtension of string
   type outdir = string
 
   fun defaultDirectory file =
@@ -126,17 +127,29 @@ end = struct
           else ()
         ; raise UnknownFile file
         )
+      | SOME _ => raise UnknownFileExtension file
       | _ => raise UnknownFile file
   in
-    fun makeTo pathmap outdir file = (maker pathmap o checkFile) outdir file
-      handle UnknownFile file =>
-        if #get Control.recover_src () then
-          ( Control.print "Failed to load... booting to REPL.\n"
-          ; { cm = NONE
-            , top = [GenFile.TopLevel(FileName.fromOriginal file, [])]
-            }
+    fun makeTo pathmap file outdir = (maker pathmap o checkFile) file outdir
+      handle
+        UnknownFile file =>
+          if #get Control.recover_src () then
+            ( Control.print "Failed to load... attempting to recover.\n"
+            ; { cm = NONE
+              , top = [GenFile.TopLevel(FileName.fromOriginal file, [])]
+              }
+            )
+          else raise UnknownFile file
+      | exn =>
+        ( print (
+            "Encountered exception ("
+            ^ exnMessage exn
+            ^ ") when loading file: "
+            ^ file ^
+            "\n"
           )
-        else raise UnknownFile file
+        ; raise exn
+        )
     fun make pathmap file = makeTo pathmap file (defaultDirectory file)
 
     fun makeTo' file = makeTo (MLtonPathMap.getPathMap ()) file
@@ -152,5 +165,4 @@ end = struct
     in
       #set Control.libmap new_libmap
     end
-
 end
