@@ -1,4 +1,4 @@
-(* src/control/LibraryMap.sml : 1.1-78.1 *)
+(* src/control/LibraryMap.sml : 1.1-79.1 *)
 (* molasses-file80.sml *)
 structure LibraryMap :>
   sig
@@ -41,6 +41,7 @@ structure LibraryMap :>
           , ("$(SML_LIB)/basis/mlton.mlb", "$/basis.cm (* mlton *)")
           , ("$(SML_LIB)/basis/unsafe.mlb", "$/basis.cm (* unsafe *)")
           , ("$(SML_LIB)/basis/build/sources.mlb", "$/basis.cm (* build *)")
+          , ("$(SML_LIB)/smlnj-lib/JSON/json-lib.mlb", "$/json-lib.cm")
           ]
       , ["SML_LIB"]
       )

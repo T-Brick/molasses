@@ -24,7 +24,7 @@ structure Molasses : sig
 end = struct
 
   val version : { id : int list, system : string } =
-    { id = [0, 1, 2]
+    { id = [0, 1, 3]
     , system = "Molasses"
     }
 
