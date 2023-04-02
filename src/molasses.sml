@@ -122,20 +122,25 @@ end = struct
         )
       end
 
+    fun checkSmlFile file =
+      ( if #get Control.recover_src () then
+          ( ignore
+          o SafeParser.parse
+          o Source.loadFromFile
+          o FilePath.fromUnixPath) file
+        else ()
+      ; raise UnknownFile file
+      )
+
     fun checkFile file =
       case OS.Path.ext file of
         SOME "mlb" => file
-      | SOME "sml" =>
-        ( if #get Control.recover_src () then
-            ( ignore
-            o SafeParser.parse
-            o Source.loadFromFile
-            o FilePath.fromUnixPath) file
-          else ()
-        ; raise UnknownFile file
-        )
-      | SOME _ => raise UnknownFileExtension file
-      | _ => raise UnknownFile file
+      | SOME "sml" => checkSmlFile file
+      | SOME "sig" => checkSmlFile file
+      | SOME "fun" => checkSmlFile file
+      | SOME "cm"  => checkSmlFile file
+      | SOME _     => raise UnknownFileExtension file
+      | NONE => raise UnknownFileExtension file
   in
     fun makeTo pathmap file outdir = (maker pathmap o checkFile) file outdir
       handle
