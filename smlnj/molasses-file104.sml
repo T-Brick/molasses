@@ -1,4 +1,4 @@
-(* src/molasses.sml : 1.1-176.1 *)
+(* src/molasses.sml : 1.1-181.1 *)
 (* molasses-file104.sml *)
 structure Molasses :
   sig
@@ -25,7 +25,7 @@ structure Molasses :
   struct
 
     val version : {id : int list, system : string} =
-      {id = [0, 1, 2], system = "Molasses"}
+      {id = [0, 1, 3], system = "Molasses"}
 
     structure Control = Control
 
@@ -118,22 +118,27 @@ structure Molasses :
               )
         end
 
+      fun checkSmlFile file =
+        ( if # get Control.recover_src () then
+            (ignore
+             o SafeParser.parse
+             o Source.loadFromFile
+             o FilePath.fromUnixPath)
+              file
+          else
+            ()
+        ; raise UnknownFile file
+        )
+
       fun checkFile file =
         case OS.Path.ext file of
           SOME "mlb" => file
-        | SOME "sml" =>
-            ( if # get Control.recover_src () then
-                (ignore
-                 o SafeParser.parse
-                 o Source.loadFromFile
-                 o FilePath.fromUnixPath)
-                  file
-              else
-                ()
-            ; raise UnknownFile file
-            )
+        | SOME "sml" => checkSmlFile file
+        | SOME "sig" => checkSmlFile file
+        | SOME "fun" => checkSmlFile file
+        | SOME "cm" => checkSmlFile file
         | SOME _ => raise UnknownFileExtension file
-        | _ => raise UnknownFile file
+        | NONE => raise UnknownFileExtension file
     in
       fun makeTo pathmap file outdir =
         (maker pathmap o checkFile) file outdir
