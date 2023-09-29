@@ -4,6 +4,12 @@ support ML Basis (MLB) files.
 
 ## Usage
 
+First make sure you clone this repo including submodules. The command should something like this:
+
+```
+git clone --recurse-submodules -j8 https://github.com/T-Brick/molasses
+```
+
 If you have MLton installed, you can build `molasses` using `make molasses`,
 then passing in a MLB file to the executable:
 
