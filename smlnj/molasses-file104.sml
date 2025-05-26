@@ -25,7 +25,7 @@ structure Molasses :
   struct
 
     val version : {id : int list, system : string} =
-      {id = [0, 1, 3], system = "Molasses"}
+      {id = [0, 1, 7], system = "Molasses"}
 
     structure Control = Control
 
